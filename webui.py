@@ -208,7 +208,7 @@ with shared.gradio_root:
 
 
                 default_prompt = modules.config.default_prompt
-                    if isinstance(default_prompt, str) and default_prompt != '':
+if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
                 with gr.Row():
                     char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
