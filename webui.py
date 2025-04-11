@@ -210,17 +210,17 @@ with shared.gradio_root:
                 default_prompt = modules.config.default_prompt
 if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
-                with gr.Row():
+            with gr.Row():
                     char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
                     save_char_btn = gr.Button("💾 Save Character")
                     status_box = gr.Textbox(label="Status", interactive=False)
 
-                with gr.Row():
+            with gr.Row():
                     load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
                     load_char_btn = gr.Button("📂 Load Character")
 
 
-                with gr.Column(scale=3, min_width=0):
+            with gr.Column(scale=3, min_width=0):
                     generate_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row', elem_id='generate_button', visible=True)
                     reset_button = gr.Button(label="Reconnect", value="Reconnect", elem_classes='type_row', elem_id='reset_button', visible=False)
                     load_parameter_button = gr.Button(label="Load Parameters", value="Load Parameters", elem_classes='type_row', elem_id='load_parameter_button', visible=False)
