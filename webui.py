@@ -210,9 +210,6 @@ with shared.gradio_root:
                     load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
                     load_char_btn = gr.Button("📂 Load Character")
 
-                save_char_btn.click(save_character, inputs=[char_name, prompt, negative_prompt], outputs=[status_box])
-                load_char_btn.click(load_character, inputs=[load_dropdown], outputs=[prompt, negative_prompt, status_box])
-
 
                 with gr.Column(scale=3, min_width=0):
                     generate_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row', elem_id='generate_button', visible=True)
@@ -468,6 +465,9 @@ with shared.gradio_root:
                                                         placeholder="Uses original prompt instead if empty.",
                                                         elem_id='enhance_prompt')
                             enhance_negative_prompt = gr.Textbox(label="Enhancement negative prompt",
+
+                save_char_btn.click(save_character, inputs=[char_name, prompt, negative_prompt], outputs=[status_box])
+                load_char_btn.click(load_character, inputs=[load_dropdown], outputs=[prompt, negative_prompt, status_box])
                                                                  placeholder="Uses original negative prompt instead if empty.",
                                                                  elem_id='enhance_negative_prompt')
 
@@ -1164,4 +1164,5 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
+
 
