@@ -1155,6 +1155,9 @@ def dump_default_english_config():
 
 # dump_default_english_config()
 
+save_char_btn.click(save_character, inputs=[char_name, prompt, negative_prompt], outputs=[status_box])
+load_char_btn.click(load_character, inputs=[load_dropdown], outputs=[prompt, negative_prompt, status_box])
+
 shared.gradio_root.launch(
     inbrowser=args_manager.args.in_browser,
     server_name=args_manager.args.listen,
@@ -1164,5 +1167,3 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
-
-
