@@ -24,6 +24,32 @@ from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
 
+# === Character Save/Load Utilities ===
+def save_character(name, prompt, negative_prompt):
+    os.makedirs("saved_characters", exist_ok=True)
+    if not name:
+        return "Please enter a name."
+    data = {
+        "prompt": prompt,
+        "negative_prompt": negative_prompt
+    }
+    with open(f"saved_characters/{name}.json", "w") as f:
+        json.dump(data, f)
+    return f"Character '{name}' saved."
+
+def load_character(name):
+    try:
+        with open(f"saved_characters/{name}.json", "r") as f:
+            data = json.load(f)
+        return data.get("prompt", ""), data.get("negative_prompt", ""), f"Character '{name}' loaded."
+    except FileNotFoundError:
+        return "", "", f"Character '{name}' not found."
+
+def list_characters():
+    os.makedirs("saved_characters", exist_ok=True)
+    return [f[:-5] for f in os.listdir("saved_characters") if f.endswith(".json")]
+
+
 def get_task(*args):
     args = list(args)
     args.pop(0)
@@ -175,6 +201,18 @@ with shared.gradio_root:
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
+                with gr.Row():
+                    char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
+                    save_char_btn = gr.Button("💾 Save Character")
+                    status_box = gr.Textbox(label="Status", interactive=False)
+
+                with gr.Row():
+                    load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
+                    load_char_btn = gr.Button("📂 Load Character")
+
+                save_char_btn.click(save_character, inputs=[char_name, prompt, negative_prompt], outputs=[status_box])
+                load_char_btn.click(load_character, inputs=[load_dropdown], outputs=[prompt, negative_prompt, status_box])
+
 
                 with gr.Column(scale=3, min_width=0):
                     generate_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row', elem_id='generate_button', visible=True)
@@ -1126,3 +1164,4 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
+
