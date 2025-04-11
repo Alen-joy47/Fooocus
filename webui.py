@@ -197,6 +197,15 @@ with shared.gradio_root:
                 with gr.Column(scale=17):
                     prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.", elem_id='positive_prompt',
                                         autofocus=True, lines=3)
+            with gr.Row():
+                 char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
+                 save_char_btn = gr.Button("💾 Save Character")
+                 status_box = gr.Textbox(label="Status", interactive=False)
+
+            with gr.Row():
+                load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
+                load_char_btn = gr.Button("📂 Load Character")
+
 
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
@@ -626,6 +635,10 @@ with shared.gradio_root:
                                              info='Describing what you do not want to see.', lines=2,
                                              elem_id='negative_prompt',
                                              value=modules.config.default_prompt_negative)
+                # --- Character Save/Load UI Bindings ---
+                save_char_btn.click(save_character, inputs=[char_name, prompt, negative_prompt], outputs=[status_box])
+                load_char_btn.click(load_character, inputs=[load_dropdown], outputs=[prompt, negative_prompt, status_box])
+
                 seed_random = gr.Checkbox(label='Random', value=True)
                 image_seed = gr.Textbox(label='Seed', value=0, max_lines=1, visible=False) # workaround for https://github.com/gradio-app/gradio/issues/5354
 
