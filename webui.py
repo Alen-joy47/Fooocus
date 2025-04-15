@@ -197,7 +197,17 @@ with shared.gradio_root:
                 with gr.Column(scale=17):
                     prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.", elem_id='positive_prompt',
                                         autofocus=True, lines=3)
+                    with gr.Row():
+                         char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
+                         save_char_btn = gr.Button("💾 Save Character")
+                         status_box = gr.Textbox(label="Status", interactive=False)
 
+                    with gr.Row():
+                        load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
+                        load_char_btn = gr.Button("📂 Load Character")
+  
+
+                    
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
