@@ -25,6 +25,71 @@ from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
 
 # === Character Save/Load Utilities ===
+def save_character(
+    name, prompt, negative_prompt,
+    aspect_ratio, style, performance,
+    seed, use_random_seed,
+    cfg, sharpness, sampler, scheduler,
+    base_model, refiner_model, refiner_switch
+):
+    os.makedirs("saved_characters", exist_ok=True)
+    if not name:
+        return "Please enter a name."
+
+    data = {
+        "prompt": prompt,
+        "negative_prompt": negative_prompt,
+        "aspect_ratio": aspect_ratio,
+        "style": style,
+        "performance": performance,
+        "seed": seed,
+        "use_random_seed": use_random_seed,
+        "cfg": cfg,
+        "sharpness": sharpness,
+        "sampler": sampler,
+        "scheduler": scheduler,
+        "base_model": base_model,
+        "refiner_model": refiner_model,
+        "refiner_switch": refiner_switch,
+    }
+
+    with open(f"saved_characters/{name}.json", "w") as f:
+        json.dump(data, f, indent=2)
+
+    return f"Character '{name}' saved with full settings."
+
+
+def load_character(name):
+    try:
+        with open(f"saved_characters/{name}.json", "r") as f:
+            data = json.load(f)
+        return (
+            data.get("prompt", ""),
+            data.get("negative_prompt", ""),
+            data.get("aspect_ratio", "1:1"),
+            data.get("style", ""),
+            data.get("performance", ""),
+            data.get("seed", 0),
+            data.get("use_random_seed", True),
+            data.get("cfg", 5),
+            data.get("sharpness", 2),
+            data.get("sampler", ""),
+            data.get("scheduler", ""),
+            data.get("base_model", ""),
+            data.get("refiner_model", ""),
+            data.get("refiner_switch", 0),
+            f"Character '{name}' loaded successfully."
+        )
+    except Exception as e:
+        return "", "", "", "", "", 0, True, 5, 2, "", "", "", "", 0, f"Error loading character: {str(e)}"
+
+
+def list_characters():
+    os.makedirs("saved_characters", exist_ok=True)
+    return [f[:-5] for f in os.listdir("saved_characters") if f.endswith(".json")]
+
+
+# === Character Save/Load Utilities ===
 def save_character(name, prompt, negative_prompt):
     os.makedirs("saved_characters", exist_ok=True)
     if not name:
