@@ -712,12 +712,12 @@ with shared.gradio_root:
                         base_model, refiner_model, refiner_switch
                    ],
                    outputs=[status_box]
-               ).then(
+                ).then(
                    fn=lambda: gr.update(choices=list_characters()),
                    outputs=[load_dropdown]
-               )
+                )
 
-               load_char_btn.click(
+                 load_char_btn.click(
                     fn=load_character,
                     inputs=[load_dropdown],
                     outputs=[
