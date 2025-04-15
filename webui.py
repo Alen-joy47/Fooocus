@@ -270,7 +270,20 @@ with shared.gradio_root:
                     with gr.Row():
                         load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
                         load_char_btn = gr.Button("📂 Load Character")
-  
+                    
+                    aspect_ratio = gr.Dropdown(label="Aspect Ratio", choices=["1:1", "16:9", "3:2", "2:3"])
+                    style = gr.Textbox(label="Style")
+                    performance = gr.Dropdown(label="Performance", choices=["Speed", "Balanced", "Quality"])
+                    seed = gr.Number(label="Seed", value=0)
+                    use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
+                    cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=5)
+                    sharpness = gr.Slider(label="Sharpness", minimum=1, maximum=5, value=2)
+                    sampler = gr.Textbox(label="Sampler")
+                    scheduler = gr.Textbox(label="Scheduler")
+                    base_model = gr.Textbox(label="Base Model")
+                    refiner_model = gr.Textbox(label="Refiner Model")
+                    refiner_switch = gr.Slider(label="Refiner Switch", minimum=0, maximum=1, value=0.5, step=0.01)
+
 
                     
                     default_prompt = modules.config.default_prompt
