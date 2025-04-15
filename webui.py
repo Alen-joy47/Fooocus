@@ -624,6 +624,9 @@ with shared.gradio_root:
                                              info='Describing what you do not want to see.', lines=2,
                                              elem_id='negative_prompt',
                                              value=modules.config.default_prompt_negative)
+                save_char_btn.click(save_character, inputs=[char_name, prompt, negative_prompt], outputs=[status_box])
+                load_char_btn.click(load_character, inputs=[load_dropdown], outputs=[prompt, negative_prompt, status_box])
+
                 seed_random = gr.Checkbox(label='Random', value=True)
                 image_seed = gr.Textbox(label='Seed', value=0, max_lines=1, visible=False) # workaround for https://github.com/gradio-app/gradio/issues/5354
 
