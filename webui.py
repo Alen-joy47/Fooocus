@@ -24,6 +24,32 @@ from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
 
+# === Character Save/Load Utilities ===
+def save_character(name, prompt, negative_prompt):
+    os.makedirs("saved_characters", exist_ok=True)
+    if not name:
+        return "Please enter a name."
+    data = {
+        "prompt": prompt,
+        "negative_prompt": negative_prompt
+    }
+    with open(f"saved_characters/{name}.json", "w") as f:
+        json.dump(data, f)
+    return f"Character '{name}' saved."
+
+def load_character(name):
+    try:
+        with open(f"saved_characters/{name}.json", "r") as f:
+            data = json.load(f)
+        return data.get("prompt", ""), data.get("negative_prompt", ""), f"Character '{name}' loaded."
+    except FileNotFoundError:
+        return "", "", f"Character '{name}' not found."
+
+def list_characters():
+    os.makedirs("saved_characters", exist_ok=True)
+    return [f[:-5] for f in os.listdir("saved_characters") if f.endswith(".json")]
+
+
 def get_task(*args):
     args = list(args)
     args.pop(0)
