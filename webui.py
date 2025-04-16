@@ -35,24 +35,25 @@ def save_character(
     cfg, sharpness, sampler, scheduler,
     base_model, refiner_model, refiner_switch
 ):
+    import os, json
     os.makedirs("saved_characters", exist_ok=True)
     if not name:
         return "Please enter a name."
 
     data = {
-        "prompt": prompt,
-        "negative_prompt": negative_prompt,
-        "aspect_ratio": aspect_ratio,
-        "style": style,
-        "performance": performance,
+        "prompt": prompt or "",
+        "negative_prompt": negative_prompt or "",
+        "aspect_ratio": aspect_ratio or "1:1",
+        "style": style or "",
+        "performance": performance or "Balanced",
         "seed": seed,
         "use_random_seed": use_random_seed,
         "cfg": cfg,
         "sharpness": sharpness,
-        "sampler": sampler,
-        "scheduler": scheduler,
-        "base_model": base_model,
-        "refiner_model": refiner_model,
+        "sampler": sampler or "DPM++",
+        "scheduler": scheduler or "Karras",
+        "base_model": base_model or "default",
+        "refiner_model": refiner_model or "default",
         "refiner_switch": refiner_switch,
     }
 
@@ -65,23 +66,25 @@ def save_character(
 
 
 def load_character(name):
+    import json
     try:
         with open(f"saved_characters/{name}.json", "r") as f:
             data = json.load(f)
+
         return (
             data.get("prompt", ""),
             data.get("negative_prompt", ""),
             data.get("aspect_ratio", "1:1"),
             data.get("style", ""),
-            data.get("performance", ""),
+            data.get("performance", "Balanced"),
             data.get("seed", 0),
             data.get("use_random_seed", True),
             data.get("cfg", 5),
             data.get("sharpness", 2),
-            data.get("sampler", ""),
-            data.get("scheduler", ""),
-            data.get("base_model", ""),
-            data.get("refiner_model", ""),
+            data.get("sampler", "DPM++"),
+            data.get("scheduler", "Karras"),
+            data.get("base_model", "default"),
+            data.get("refiner_model", "default"),
             data.get("refiner_switch", 0),
             f"Character '{name}' loaded successfully."
         )
