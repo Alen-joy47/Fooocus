@@ -62,6 +62,7 @@ def save_character(
     return f"Character '{name}' saved with full settings."
 
 
+
 def load_character(name):
     try:
         with open(f"saved_characters/{name}.json", "r") as f:
