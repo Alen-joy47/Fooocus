@@ -24,7 +24,6 @@ from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
 
-# === Character Save/Load Utilities ===
 def save_character(
     name, prompt, negative_prompt,
     aspect_ratio, style, performance,
@@ -57,6 +56,7 @@ def save_character(
         json.dump(data, f, indent=2)
 
     return f"Character '{name}' saved with full settings."
+
 
 
 def load_character(name):
