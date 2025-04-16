@@ -24,6 +24,10 @@ from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
 
+import os
+import json
+import gradio as gr
+
 def save_character(
     name, prompt, negative_prompt,
     aspect_ratio, style, performance,
@@ -56,6 +60,31 @@ def save_character(
         json.dump(data, f, indent=2)
 
     return f"Character '{name}' saved with full settings."
+
+# Gradio interface to call the function
+iface = gr.Interface(
+    fn=save_character,
+    inputs=[
+        gr.Textbox(label="Name"),
+        gr.Textbox(label="Prompt"),
+        gr.Textbox(label="Negative Prompt"),
+        gr.Textbox(label="Aspect Ratio"),
+        gr.Textbox(label="Style"),
+        gr.Textbox(label="Performance"),
+        gr.Number(label="Seed"),
+        gr.Checkbox(label="Use Random Seed"),
+        gr.Number(label="CFG"),
+        gr.Slider(label="Sharpness"),
+        gr.Dropdown(label="Sampler", choices=["Sampler 1", "Sampler 2"]),
+        gr.Dropdown(label="Scheduler", choices=["Scheduler 1", "Scheduler 2"]),
+        gr.Dropdown(label="Base Model", choices=["Model 1", "Model 2"]),
+        gr.Dropdown(label="Refiner Model", choices=["Refiner 1", "Refiner 2"]),
+        gr.Checkbox(label="Refiner Switch")
+    ],
+    outputs="text"
+)
+
+iface.launch()
 
 
 
