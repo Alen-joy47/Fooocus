@@ -23,34 +23,79 @@ from modules.private_logger import get_current_html_path
 from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
-import os, json
-from PIL import Image
 
-def save_character(name, controlnet_image_path, generation_params):
+import os
+import json
+import gradio as gr
+
+def save_character(
+    name, prompt, negative_prompt,
+    aspect_ratio, style, performance,
+    seed, use_random_seed,
+    cfg, sharpness, sampler, scheduler,
+    base_model, refiner_model, refiner_switch
+):
+    import os, json
     os.makedirs("saved_characters", exist_ok=True)
-    if not name or not os.path.exists(controlnet_image_path):
-        return f"Invalid name or missing ControlNet image."
+    if not name:
+        return "Please enter a name."
 
-    # Save control image
-    img = Image.open(controlnet_image_path)
-    img.save(f"saved_characters/{name}.png")
+    data = {
+        "prompt": prompt or "",
+        "negative_prompt": negative_prompt or "",
+        "aspect_ratio": aspect_ratio or "1:1",
+        "style": style or "",
+        "performance": performance or "Balanced",
+        "seed": int(seed), 
+        "use_random_seed": use_random_seed,
+        "cfg": cfg,
+        "sharpness": sharpness,
+        "sampler": sampler or "DPM++",
+        "scheduler": scheduler or "Karras",
+        "base_model": base_model or "default",
+        "refiner_model": refiner_model or "default",
+        "refiner_switch": refiner_switch,
+    }
 
-    # Save parameters (excluding prompt)
     with open(f"saved_characters/{name}.json", "w") as f:
-        json.dump(generation_params, f, indent=2)
+        json.dump(data, f, indent=2)
 
-    return f"✅ Character '{name}' saved successfully."
+    return f"Character '{name}' saved with full settings."
+
+
+
 
 def load_character(name):
-    image_path = f"saved_characters/{name}.png"
-    params_path = f"saved_characters/{name}.json"
-    if not os.path.exists(image_path) or not os.path.exists(params_path):
-        return None, None
+    import json
+    try:
+        with open(f"saved_characters/{name}.json", "r") as f:
+            data = json.load(f)
 
-    with open(params_path, "r") as f:
-        params = json.load(f)
+        return (
+            data.get("prompt", ""),
+            data.get("negative_prompt", ""),
+            data.get("aspect_ratio", "1:1"),
+            data.get("style", ""),
+            data.get("performance", "Balanced"),
+            data.get("seed", 0),
+            data.get("use_random_seed", True),
+            data.get("cfg", 5),
+            data.get("sharpness", 2),
+            data.get("sampler", "DPM++"),
+            data.get("scheduler", "Karras"),
+            data.get("base_model", "default"),
+            data.get("refiner_model", "default"),
+            data.get("refiner_switch", 0),
+            f"Character '{name}' loaded successfully."
+        )
+    except Exception as e:
+        return "", "", "", "", "", 0, True, 5, 2, "", "", "", "", 0, f"Error loading character: {str(e)}"
 
-    return image_path, params
+
+def list_characters():
+    os.makedirs("saved_characters", exist_ok=True)
+    return [f[:-5] for f in os.listdir("saved_characters") if f.endswith(".json")]
+
 
 
 def get_task(*args):
@@ -184,7 +229,6 @@ shared.gradio_root = gr.Blocks(title=title).queue()
 with shared.gradio_root:
     currentTask = gr.State(worker.AsyncTask(args=[]))
     inpaint_engine_state = gr.State('empty')
-
     with gr.Row():
         with gr.Column(scale=2):
             with gr.Row():
@@ -192,59 +236,51 @@ with shared.gradio_root:
                                             elem_classes=['main_view'])
                 progress_gallery = gr.Gallery(label='Finished Images', show_label=True, object_fit='contain',
                                               height=768, visible=False, elem_classes=['main_view', 'image_gallery'])
-
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False,
                                     elem_id='progress-bar', elem_classes='progress-bar')
-
             gallery = gr.Gallery(label='Gallery', show_label=False, object_fit='contain', visible=True, height=768,
                                  elem_classes=['resizable_area', 'main_view', 'final_gallery', 'image_gallery'],
                                  elem_id='final_gallery')
-
             with gr.Row():
                 with gr.Column(scale=17):
-                    prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.",
-                                        elem_id='positive_prompt', autofocus=True, lines=3)
+                    prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.", elem_id='positive_prompt',
+                                        autofocus=True, lines=3)
+                    with gr.Row():
+                         char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
+                         save_char_btn = gr.Button("💾 Save Character")
+                         status_box = gr.Textbox(label="Status", interactive=False)
 
+                    with gr.Row():
+                        load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
+                        load_char_btn = gr.Button("📂 Load Character")
+                    
+                    aspect_ratio = gr.Dropdown(label="Aspect Ratio", choices=["1:1", "16:9", "3:2", "2:3"])
+                    style = gr.Textbox(label="Style")
+                    performance = gr.Dropdown(label="Performance", choices=["Speed", "Balanced", "Quality"])
+                    seed = gr.Number(label="Seed", value=0, precision=0)
+                    use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
+                    cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=5)
+                    sharpness = gr.Slider(label="Sharpness", minimum=1, maximum=5, value=2)
+                    sampler = gr.Textbox(label="Sampler")
+                    scheduler = gr.Textbox(label="Scheduler")
+                    base_model = gr.Textbox(label="Base Model")
+                    refiner_model = gr.Textbox(label="Refiner Model")
+                    refiner_switch = gr.Slider(label="Refiner Switch", minimum=0, maximum=1, value=0.5, step=0.01)
+
+
+                    
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
 
-            # ✅ Add Save/Load UI below the prompt row (same indentation level)
-            with gr.Row():
-                save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
-                save_btn = gr.Button("Save Character")
-                load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
-                load_btn = gr.Button("Load Character")
+                with gr.Column(scale=3, min_width=0):
+                    generate_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row', elem_id='generate_button', visible=True)
+                    reset_button = gr.Button(label="Reconnect", value="Reconnect", elem_classes='type_row', elem_id='reset_button', visible=False)
+                    load_parameter_button = gr.Button(label="Load Parameters", value="Load Parameters", elem_classes='type_row', elem_id='load_parameter_button', visible=False)
+                    skip_button = gr.Button(label="Skip", value="Skip", elem_classes='type_row_half', elem_id='skip_button', visible=False)
+                    stop_button = gr.Button(label="Stop", value="Stop", elem_classes='type_row_half', elem_id='stop_button', visible=False)
 
-            status = gr.Textbox(label="Status", interactive=False)
-
-            # ✅ Make sure functions are not indented inside Gradio blocks
-def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base_model):
-    params = {
-        "seed": seed,
-        "cfg": cfg,
-        "sampler": sampler,
-        "scheduler": scheduler,
-        "base_model": base_model,
-    }
-    return save_character(name, controlnet_image_path, params)
-
-
-    def handle_load(name):
-        return load_character(name)
-
-    save_btn.click(handle_save, inputs=[save_name, controlnet_image_path_var, seed, cfg, sampler, scheduler, base_model], outputs=status)
-    load_btn.click(handle_load, inputs=load_name, outputs=[controlnet_image_var, seed, cfg, sampler, scheduler, base_model])
-
-
-    with gr.Column(scale=3, min_width=0):
-                generate_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row', elem_id='generate_button', visible=True)
-                reset_button = gr.Button(label="Reconnect", value="Reconnect", elem_classes='type_row', elem_id='reset_button', visible=False)
-                load_parameter_button = gr.Button(label="Load Parameters", value="Load Parameters", elem_classes='type_row', elem_id='load_parameter_button', visible=False)
-                skip_button = gr.Button(label="Skip", value="Skip", elem_classes='type_row_half', elem_id='skip_button', visible=False)
-                stop_button = gr.Button(label="Stop", value="Stop", elem_classes='type_row_half', elem_id='stop_button', visible=False)
-
-def stop_clicked(currentTask):
+                    def stop_clicked(currentTask):
                         import ldm_patched.modules.model_management as model_management
                         currentTask.last_stop = 'stop'
                         if (currentTask.processing):
@@ -331,7 +367,7 @@ def stop_clicked(currentTask):
                                 gr.HTML('* Powered by Fooocus Inpaint Engine <a href="https://github.com/lllyasviel/Fooocus/discussions/414" target="_blank">\U0001F4D4 Documentation</a>')
                                 example_inpaint_prompts.click(lambda x: x[0], inputs=example_inpaint_prompts, outputs=inpaint_additional_prompt, show_progress=False, queue=False)
 
-    with gr.Column(visible=modules.config.default_inpaint_advanced_masking_checkbox) as inpaint_mask_generation_col:
+                            with gr.Column(visible=modules.config.default_inpaint_advanced_masking_checkbox) as inpaint_mask_generation_col:
                                 inpaint_mask_image = grh.Image(label='Mask Upload', source='upload', type='numpy', tool='sketch', height=500, brush_color="#FFFFFF", mask_opacity=1, elem_id='inpaint_mask_canvas')
                                 invert_mask_checkbox = gr.Checkbox(label='Invert Mask When Generating', value=modules.config.default_invert_mask_checkbox)
                                 inpaint_mask_model = gr.Dropdown(label='Mask generation model',
@@ -421,7 +457,7 @@ def stop_clicked(currentTask):
                                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/3281" target="_blank">\U0001F4D4 Documentation</a>')
 
                     with gr.Tab(label='Metadata', id='metadata_tab') as metadata_tab:
-    with gr.Column():
+                        with gr.Column():
                             metadata_input_image = grh.Image(label='For images created by Fooocus', source='upload', type='pil')
                             metadata_json = gr.JSON(label='Metadata')
                             metadata_import_button = gr.Button(value='Apply Metadata')
@@ -616,7 +652,7 @@ def stop_clicked(currentTask):
             enhance_checkbox.change(lambda x: gr.update(visible=x), inputs=enhance_checkbox,
                                         outputs=enhance_input_panel, queue=False, show_progress=False, _js=switch_js)
 
-    with gr.Column(scale=1, visible=modules.config.default_advanced_checkbox) as advanced_column:
+        with gr.Column(scale=1, visible=modules.config.default_advanced_checkbox) as advanced_column:
             with gr.Tab(label='Settings'):
                 if not args_manager.args.disable_preset_selection:
                     preset_selection = gr.Dropdown(label='Preset',
@@ -649,9 +685,38 @@ def stop_clicked(currentTask):
                                              info='Describing what you do not want to see.', lines=2,
                                              elem_id='negative_prompt',
                                              value=modules.config.default_prompt_negative)
-                seed_random = gr.Checkbox(label='Random', value=True)
-                image_seed = gr.Textbox(label='Seed', value=0, max_lines=1, visible=False) # workaround for https://github.com/gradio-app/gradio/issues/5354
+                seed = gr.Number(label="Seed", value=0, precision=0)
+                use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
+                
+                save_char_btn.click(
+                    fn=save_character,
+                    inputs=[
+                        char_name, prompt, negative_prompt,
+                        aspect_ratio, style, performance,
+                        seed, use_random_seed,
+                        cfg, sharpness, sampler, scheduler,
+                        base_model, refiner_model, refiner_switch
+                   ],
+                   outputs=[status_box]
+                 ).then(
+                   fn=lambda: gr.update(choices=list_characters()),
+                   outputs=[load_dropdown]
+                )
 
+                load_char_btn.click(
+                    fn=load_character,
+                    inputs=[load_dropdown],
+                    outputs=[
+                        prompt, negative_prompt,
+                        aspect_ratio, style, performance,
+                        seed, use_random_seed,
+                        cfg, sharpness, sampler, scheduler,
+                        base_model, refiner_model, refiner_switch,
+                        status_box
+                   ]
+              )
+
+         
                 def random_checked(r):
                     return gr.update(visible=not r)
 
@@ -756,7 +821,7 @@ def stop_clicked(currentTask):
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117" target="_blank">\U0001F4D4 Documentation</a>')
                 dev_mode = gr.Checkbox(label='Developer Debug Mode', value=modules.config.default_developer_debug_mode_checkbox, container=False)
 
-    with gr.Column(visible=modules.config.default_developer_debug_mode_checkbox) as dev_tools:
+                with gr.Column(visible=modules.config.default_developer_debug_mode_checkbox) as dev_tools:
                     with gr.Tab(label='Debug Tools'):
                         adm_scaler_positive = gr.Slider(label='Positive ADM Guidance Scaler', minimum=0.1, maximum=3.0,
                                                         step=0.001, value=1.5, info='The scaler multiplied to positive ADM (use 1.0 to disable). ')
@@ -1187,3 +1252,4 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
+
