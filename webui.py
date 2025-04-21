@@ -17,7 +17,8 @@ import args_manager
 import copy
 import launch
 from extras.inpaint_mask import SAMOptions
-from controlnet import ControlNetModel  # Or the appropriate import for your ControlNet model
+from ldm_patched.controlnet import set_controlnet_model
+ # Or the appropriate import for your ControlNet model
 
 
 from modules.sdxl_styles import legal_style_names
@@ -75,9 +76,10 @@ def load_character_with_controlnet(name):
     return prompt, negative_prompt, seed, use_random_seed, cfg, sharpness, sampler, scheduler, base_model, refiner_model
 
 def apply_controlnet_params(controlnet_params):
-    # Assuming controlnet_params is a dictionary containing the settings
-    controlnet_model = ControlNetModel.from_pretrained(controlnet_params.get("model_name"))
-    
+    model_name = controlnet_params.get("model_name")
+    if model_name:
+        set_controlnet_model(model_name)
+
     # Set the model in your generation pipeline (this step depends on how ControlNet is integrated in your pipeline)
     model.set_controlnet(controlnet_model)
 import gradio as gr
