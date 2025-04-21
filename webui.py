@@ -46,7 +46,7 @@ def save_character(
         "aspect_ratio": aspect_ratio or "1:1",
         "style": style or "",
         "performance": performance or "Balanced",
-        "seed": seed,
+        "seed": int(seed), 
         "use_random_seed": use_random_seed,
         "cfg": cfg,
         "sharpness": sharpness,
@@ -257,7 +257,7 @@ with shared.gradio_root:
                     aspect_ratio = gr.Dropdown(label="Aspect Ratio", choices=["1:1", "16:9", "3:2", "2:3"])
                     style = gr.Textbox(label="Style")
                     performance = gr.Dropdown(label="Performance", choices=["Speed", "Balanced", "Quality"])
-                    seed = gr.Number(label="Seed", value=0)
+                    seed = gr.Number(label="Seed", value=0, precision=0)
                     use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
                     cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=5)
                     sharpness = gr.Slider(label="Sharpness", minimum=1, maximum=5, value=2)
