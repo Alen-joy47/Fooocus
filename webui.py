@@ -23,6 +23,35 @@ from modules.private_logger import get_current_html_path
 from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
+import os, json
+from PIL import Image
+
+def save_character(name, controlnet_image_path, generation_params):
+    os.makedirs("saved_characters", exist_ok=True)
+    if not name or not os.path.exists(controlnet_image_path):
+        return f"Invalid name or missing ControlNet image."
+
+    # Save control image
+    img = Image.open(controlnet_image_path)
+    img.save(f"saved_characters/{name}.png")
+
+    # Save parameters (excluding prompt)
+    with open(f"saved_characters/{name}.json", "w") as f:
+        json.dump(generation_params, f, indent=2)
+
+    return f"✅ Character '{name}' saved successfully."
+
+def load_character(name):
+    image_path = f"saved_characters/{name}.png"
+    params_path = f"saved_characters/{name}.json"
+    if not os.path.exists(image_path) or not os.path.exists(params_path):
+        return None, None
+
+    with open(params_path, "r") as f:
+        params = json.load(f)
+
+    return image_path, params
+
 
 def get_task(*args):
     args = list(args)
