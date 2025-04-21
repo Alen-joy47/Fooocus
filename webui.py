@@ -237,7 +237,7 @@ def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base
     load_btn.click(handle_load, inputs=load_name, outputs=[controlnet_image_var, seed, cfg, sampler, scheduler, base_model])
 
 
-            with gr.Column(scale=3, min_width=0):
+    with gr.Column(scale=3, min_width=0):
                 generate_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row', elem_id='generate_button', visible=True)
                 reset_button = gr.Button(label="Reconnect", value="Reconnect", elem_classes='type_row', elem_id='reset_button', visible=False)
                 load_parameter_button = gr.Button(label="Load Parameters", value="Load Parameters", elem_classes='type_row', elem_id='load_parameter_button', visible=False)
@@ -331,7 +331,7 @@ def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base
                                 gr.HTML('* Powered by Fooocus Inpaint Engine <a href="https://github.com/lllyasviel/Fooocus/discussions/414" target="_blank">\U0001F4D4 Documentation</a>')
                                 example_inpaint_prompts.click(lambda x: x[0], inputs=example_inpaint_prompts, outputs=inpaint_additional_prompt, show_progress=False, queue=False)
 
-                            with gr.Column(visible=modules.config.default_inpaint_advanced_masking_checkbox) as inpaint_mask_generation_col:
+    with gr.Column(visible=modules.config.default_inpaint_advanced_masking_checkbox) as inpaint_mask_generation_col:
                                 inpaint_mask_image = grh.Image(label='Mask Upload', source='upload', type='numpy', tool='sketch', height=500, brush_color="#FFFFFF", mask_opacity=1, elem_id='inpaint_mask_canvas')
                                 invert_mask_checkbox = gr.Checkbox(label='Invert Mask When Generating', value=modules.config.default_invert_mask_checkbox)
                                 inpaint_mask_model = gr.Dropdown(label='Mask generation model',
@@ -421,7 +421,7 @@ def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base
                                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/3281" target="_blank">\U0001F4D4 Documentation</a>')
 
                     with gr.Tab(label='Metadata', id='metadata_tab') as metadata_tab:
-                        with gr.Column():
+    with gr.Column():
                             metadata_input_image = grh.Image(label='For images created by Fooocus', source='upload', type='pil')
                             metadata_json = gr.JSON(label='Metadata')
                             metadata_import_button = gr.Button(value='Apply Metadata')
@@ -616,7 +616,7 @@ def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base
             enhance_checkbox.change(lambda x: gr.update(visible=x), inputs=enhance_checkbox,
                                         outputs=enhance_input_panel, queue=False, show_progress=False, _js=switch_js)
 
-        with gr.Column(scale=1, visible=modules.config.default_advanced_checkbox) as advanced_column:
+    with gr.Column(scale=1, visible=modules.config.default_advanced_checkbox) as advanced_column:
             with gr.Tab(label='Settings'):
                 if not args_manager.args.disable_preset_selection:
                     preset_selection = gr.Dropdown(label='Preset',
@@ -756,7 +756,7 @@ def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base
                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/117" target="_blank">\U0001F4D4 Documentation</a>')
                 dev_mode = gr.Checkbox(label='Developer Debug Mode', value=modules.config.default_developer_debug_mode_checkbox, container=False)
 
-                with gr.Column(visible=modules.config.default_developer_debug_mode_checkbox) as dev_tools:
+    with gr.Column(visible=modules.config.default_developer_debug_mode_checkbox) as dev_tools:
                     with gr.Tab(label='Debug Tools'):
                         adm_scaler_positive = gr.Slider(label='Positive ADM Guidance Scaler', minimum=0.1, maximum=3.0,
                                                         step=0.001, value=1.5, info='The scaler multiplied to positive ADM (use 1.0 to disable). ')
@@ -1186,41 +1186,4 @@ shared.gradio_root.launch(
     auth=check_auth if (args_manager.args.share or args_manager.args.listen) and auth_enabled else None,
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
-)
-
-def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base_model):
-    params = {
-        "seed": int(seed),
-        "cfg": cfg,
-        "sampler": sampler,
-        "scheduler": scheduler,
-        "base_model": base_model,
-    }
-    return save_character(name, controlnet_image_path, params)
-
-def handle_load(name):
-    image_path, params = load_character(name)
-    if not params:
-        return None, None, None, None, None, None, "❌ Failed to load character."
-    return (
-        image_path,
-        params.get("seed"),
-        params.get("cfg"),
-        params.get("sampler"),
-        params.get("scheduler"),
-        params.get("base_model"),
-        f"✅ Character '{name}' loaded."
-    )
-
-# Button wiring
-save_btn.click(
-    fn=handle_save,
-    inputs=[save_name, controlnet_image_var, image_seed, guidance_scale, sampler_name, scheduler_name, base_model],
-    outputs=status
-)
-
-load_btn.click(
-    fn=handle_load,
-    inputs=[load_name],
-    outputs=[controlnet_image_var, image_seed, guidance_scale, sampler_name, scheduler_name, base_model, status]
 )
