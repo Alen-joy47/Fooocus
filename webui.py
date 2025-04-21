@@ -732,7 +732,7 @@ with shared.gradio_root:
                             pass
                         return random.randint(constants.MIN_SEED, constants.MAX_SEED)
 
-                use_random_seed.change(random_checked, inputs=[use_random_seed], outputs=[image_seed],
+                use_random_seed.change(random_checked, inputs=[use_random_seed], outputs=[seed],
                                    queue=False, show_progress=False)
 
                 def update_history_link():
