@@ -18,100 +18,11 @@ import copy
 import launch
 from extras.inpaint_mask import SAMOptions
 
-
-
 from modules.sdxl_styles import legal_style_names
 from modules.private_logger import get_current_html_path
 from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
-import json
-import os
-
-def save_character_with_controlnet(name, prompt, negative_prompt, controlnet_params, seed, use_random_seed, cfg, sharpness, sampler, scheduler, base_model, refiner_model):
-    os.makedirs("saved_characters", exist_ok=True)
-
-    data = {
-        "prompt": prompt,
-        "negative_prompt": negative_prompt,
-        "controlnet_params": controlnet_params,
-        "seed": seed,
-        "use_random_seed": use_random_seed,
-        "cfg": cfg,
-        "sharpness": sharpness,
-        "sampler": sampler,
-        "scheduler": scheduler,
-        "base_model": base_model,
-        "refiner_model": refiner_model
-    }
-
-    with open(f"saved_characters/{name}.json", "w") as f:
-        json.dump(data, f, indent=2)
-
-    return f"✅ Character '{name}' saved!"
-
-
-def load_character_with_controlnet(name):
-    with open(f"saved_characters/{name}.json", "r") as f:
-        data = json.load(f)
-
-    return (
-        data.get("prompt", ""),
-        data.get("negative_prompt", ""),
-        data.get("controlnet_params", {}),
-        data.get("seed", 0),
-        data.get("use_random_seed", True),
-        data.get("cfg", 7),
-        data.get("sharpness", 2),
-        data.get("sampler", "dpmpp_2m_sde_gpu"),
-        data.get("scheduler", "karras"),
-        data.get("base_model", "default_model"),
-        data.get("refiner_model", "default_refiner_model")
-    )
-
-
-def apply_controlnet_params(controlnet_params):
-    model_name = controlnet_params.get("model_name")
-    if model_name:
-        set_controlnet_model(model_name)
-
-return prompt, negative_prompt, seed, use_random_seed, cfg, sharpness, sampler, scheduler, base_model, refiner_model
-
-    # Set the model in your generation pipeline (this step depends on how ControlNet is integrated in your pipeline)
-model.set_controlnet(controlnet_model)
-import gradio as gr
-
-# Define UI components for saving/loading characters
-char_name = gr.Textbox(label="Character Name")
-prompt = gr.Textbox(label="Prompt")
-negative_prompt = gr.Textbox(label="Negative Prompt")
-controlnet_params = gr.JSON(label="ControlNet Parameters")  # Add ControlNet parameters input
-save_char_btn = gr.Button("Save Character")
-load_dropdown = gr.Dropdown(choices=["Character1", "Character2"], label="Select Character")
-load_char_btn = gr.Button("Load Character")
-
-# Define save character button click event
-save_char_btn.click(
-    fn=save_character_with_controlnet,
-    inputs=[
-        char_name, prompt, negative_prompt, controlnet_params,
-        seed, use_random_seed, cfg, sharpness, sampler, scheduler,
-        base_model, refiner_model
-    ],
-    outputs=[status_box]  # Add the appropriate output
-)
-
-# Define load character button click event
-load_char_btn.click(
-    fn=load_character_with_controlnet,
-    inputs=[load_dropdown],
-    outputs=[
-        prompt, negative_prompt, controlnet_params,
-        seed, use_random_seed, cfg, sharpness, sampler, scheduler,
-        base_model, refiner_model
-    ]
-)
-
 
 def get_task(*args):
     args = list(args)
