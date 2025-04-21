@@ -17,8 +17,7 @@ import args_manager
 import copy
 import launch
 from extras.inpaint_mask import SAMOptions
-from ldm_patched.controlnet import set_controlnet_model
- # Or the appropriate import for your ControlNet model
+
 
 
 from modules.sdxl_styles import legal_style_names
@@ -31,14 +30,11 @@ import os
 
 def save_character_with_controlnet(name, prompt, negative_prompt, controlnet_params, seed, use_random_seed, cfg, sharpness, sampler, scheduler, base_model, refiner_model):
     os.makedirs("saved_characters", exist_ok=True)
-    
-    if not name:
-        return "Please enter a name."
-    
+
     data = {
         "prompt": prompt,
         "negative_prompt": negative_prompt,
-        "controlnet_params": controlnet_params,  # Save ControlNet settings
+        "controlnet_params": controlnet_params,
         "seed": seed,
         "use_random_seed": use_random_seed,
         "cfg": cfg,
@@ -52,28 +48,27 @@ def save_character_with_controlnet(name, prompt, negative_prompt, controlnet_par
     with open(f"saved_characters/{name}.json", "w") as f:
         json.dump(data, f, indent=2)
 
-    return f"Character '{name}' saved with full settings."
+    return f"✅ Character '{name}' saved!"
+
 
 def load_character_with_controlnet(name):
     with open(f"saved_characters/{name}.json", "r") as f:
         data = json.load(f)
 
-    prompt = data.get("prompt", "")
-    negative_prompt = data.get("negative_prompt", "")
-    controlnet_params = data.get("controlnet_params", {})
-    seed = data.get("seed", 0)
-    use_random_seed = data.get("use_random_seed", True)
-    cfg = data.get("cfg", 7)
-    sharpness = data.get("sharpness", 2)
-    sampler = data.get("sampler", "dpmpp_2m_sde_gpu")
-    scheduler = data.get("scheduler", "karras")
-    base_model = data.get("base_model", "default_model")
-    refiner_model = data.get("refiner_model", "default_refiner_model")
-    
-    # Apply ControlNet settings (this part will depend on how ControlNet is integrated)
-    apply_controlnet_params(controlnet_params)
-    
-    return prompt, negative_prompt, seed, use_random_seed, cfg, sharpness, sampler, scheduler, base_model, refiner_model
+    return (
+        data.get("prompt", ""),
+        data.get("negative_prompt", ""),
+        data.get("controlnet_params", {}),
+        data.get("seed", 0),
+        data.get("use_random_seed", True),
+        data.get("cfg", 7),
+        data.get("sharpness", 2),
+        data.get("sampler", "dpmpp_2m_sde_gpu"),
+        data.get("scheduler", "karras"),
+        data.get("base_model", "default_model"),
+        data.get("refiner_model", "default_refiner_model")
+    )
+
 
 def apply_controlnet_params(controlnet_params):
     model_name = controlnet_params.get("model_name")
