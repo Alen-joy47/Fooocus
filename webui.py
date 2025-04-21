@@ -75,6 +75,8 @@ def apply_controlnet_params(controlnet_params):
     if model_name:
         set_controlnet_model(model_name)
 
+return prompt, negative_prompt, seed, use_random_seed, cfg, sharpness, sampler, scheduler, base_model, refiner_model
+
     # Set the model in your generation pipeline (this step depends on how ControlNet is integrated in your pipeline)
     model.set_controlnet(controlnet_model)
 import gradio as gr
