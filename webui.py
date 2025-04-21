@@ -1187,3 +1187,40 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
+
+def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base_model):
+    params = {
+        "seed": int(seed),
+        "cfg": cfg,
+        "sampler": sampler,
+        "scheduler": scheduler,
+        "base_model": base_model,
+    }
+    return save_character(name, controlnet_image_path, params)
+
+def handle_load(name):
+    image_path, params = load_character(name)
+    if not params:
+        return None, None, None, None, None, None, "❌ Failed to load character."
+    return (
+        image_path,
+        params.get("seed"),
+        params.get("cfg"),
+        params.get("sampler"),
+        params.get("scheduler"),
+        params.get("base_model"),
+        f"✅ Character '{name}' loaded."
+    )
+
+# Button wiring
+save_btn.click(
+    fn=handle_save,
+    inputs=[save_name, controlnet_image_var, image_seed, guidance_scale, sampler_name, scheduler_name, base_model],
+    outputs=status
+)
+
+load_btn.click(
+    fn=handle_load,
+    inputs=[load_name],
+    outputs=[controlnet_image_var, image_seed, guidance_scale, sampler_name, scheduler_name, base_model, status]
+)
