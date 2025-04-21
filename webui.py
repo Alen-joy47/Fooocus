@@ -685,6 +685,9 @@ with shared.gradio_root:
                                              info='Describing what you do not want to see.', lines=2,
                                              elem_id='negative_prompt',
                                              value=modules.config.default_prompt_negative)
+                seed = gr.Number(label="Seed", value=0, precision=0)
+                use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
+                
                 save_char_btn.click(
                     fn=save_character,
                     inputs=[
@@ -713,9 +716,7 @@ with shared.gradio_root:
                    ]
               )
 
-                seed_random = gr.Checkbox(label='Random', value=True)
-                image_seed = gr.Textbox(label='Seed', value=0, max_lines=1, visible=False) # workaround for https://github.com/gradio-app/gradio/issues/5354
-
+         
                 def random_checked(r):
                     return gr.update(visible=not r)
 
