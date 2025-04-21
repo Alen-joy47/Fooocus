@@ -184,6 +184,7 @@ shared.gradio_root = gr.Blocks(title=title).queue()
 with shared.gradio_root:
     currentTask = gr.State(worker.AsyncTask(args=[]))
     inpaint_engine_state = gr.State('empty')
+
     with gr.Row():
         with gr.Column(scale=2):
             with gr.Row():
@@ -191,36 +192,43 @@ with shared.gradio_root:
                                             elem_classes=['main_view'])
                 progress_gallery = gr.Gallery(label='Finished Images', show_label=True, object_fit='contain',
                                               height=768, visible=False, elem_classes=['main_view', 'image_gallery'])
+
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False,
                                     elem_id='progress-bar', elem_classes='progress-bar')
+
             gallery = gr.Gallery(label='Gallery', show_label=False, object_fit='contain', visible=True, height=768,
                                  elem_classes=['resizable_area', 'main_view', 'final_gallery', 'image_gallery'],
                                  elem_id='final_gallery')
+
             with gr.Row():
                 with gr.Column(scale=17):
-                    prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.", elem_id='positive_prompt',
-                                        autofocus=True, lines=3)
+                    prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.",
+                                        elem_id='positive_prompt', autofocus=True, lines=3)
 
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
+
+            # ✅ Add Save/Load UI below the prompt row (same indentation level)
             with gr.Row():
-               save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
-               save_btn = gr.Button("Save Character")
-               load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
-               load_btn = gr.Button("Load Character")
+                save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
+                save_btn = gr.Button("Save Character")
+                load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
+                load_btn = gr.Button("Load Character")
 
-               status = gr.Textbox(label="Status", interactive=False)
+            status = gr.Textbox(label="Status", interactive=False)
 
-               def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base_model):
-                   params = {
-                       "seed": seed,
-                       "cfg": cfg,
-                       "sampler": sampler,
-                       "scheduler": scheduler,
-                       "base_model": base_model,
-                   }
-                   return save_character(name, controlnet_image_path, params)
+            # ✅ Make sure functions are not indented inside Gradio blocks
+def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base_model):
+    params = {
+        "seed": seed,
+        "cfg": cfg,
+        "sampler": sampler,
+        "scheduler": scheduler,
+        "base_model": base_model,
+    }
+    return save_character(name, controlnet_image_path, params)
+
 
     def handle_load(name):
         return load_character(name)
