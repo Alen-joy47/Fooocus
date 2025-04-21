@@ -23,6 +23,34 @@ from modules.private_logger import get_current_html_path
 from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
+import os
+import json
+from PIL import Image
+
+# Add these lines where you define the UI components
+with gr.Column():
+    character_name_input = gr.Textbox(label="Character Name")
+    save_button = gr.Button("Save Character")
+
+def save_character_controlnet(name, control_image, controlnet_params, seed, sampler, model):
+    os.makedirs("saved_characters", exist_ok=True)
+
+    # Save the image (ControlNet image as PNG)
+    image_path = f"saved_characters/{name}.png"
+    control_image.save(image_path)
+
+    # Save metadata (ControlNet settings, seed, sampler, model)
+    metadata = {
+        "controlnet_params": controlnet_params,
+        "seed": seed,
+        "sampler": sampler,
+        "model": model
+    }
+    with open(f"saved_characters/{name}.json", "w") as f:
+        json.dump(metadata, f)
+
+    return f"Character '{name}' saved successfully."
+
 
 def get_task(*args):
     args = list(args)
