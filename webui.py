@@ -204,23 +204,23 @@ with shared.gradio_root:
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
-    with gr.Row():
-        save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
-        save_btn = gr.Button("Save Character")
-        load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
-        load_btn = gr.Button("Load Character")
+            with gr.Row():
+               save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
+               save_btn = gr.Button("Save Character")
+               load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
+               load_btn = gr.Button("Load Character")
 
-        status = gr.Textbox(label="Status", interactive=False)
+               status = gr.Textbox(label="Status", interactive=False)
 
-        def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base_model):
-            params = {
-                "seed": seed,
-                "cfg": cfg,
-                "sampler": sampler,
-                "scheduler": scheduler,
-                "base_model": base_model,
-            }
-            return save_character(name, controlnet_image_path, params)
+               def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base_model):
+                   params = {
+                       "seed": seed,
+                       "cfg": cfg,
+                       "sampler": sampler,
+                       "scheduler": scheduler,
+                       "base_model": base_model,
+                   }
+                   return save_character(name, controlnet_image_path, params)
 
     def handle_load(name):
         return load_character(name)
@@ -229,7 +229,7 @@ with shared.gradio_root:
     load_btn.click(handle_load, inputs=load_name, outputs=[controlnet_image_var, seed, cfg, sampler, scheduler, base_model])
 
 
-                with gr.Column(scale=3, min_width=0):
+            with gr.Column(scale=3, min_width=0):
                     generate_button = gr.Button(label="Generate", value="Generate", elem_classes='type_row', elem_id='generate_button', visible=True)
                     reset_button = gr.Button(label="Reconnect", value="Reconnect", elem_classes='type_row', elem_id='reset_button', visible=False)
                     load_parameter_button = gr.Button(label="Load Parameters", value="Load Parameters", elem_classes='type_row', elem_id='load_parameter_button', visible=False)
