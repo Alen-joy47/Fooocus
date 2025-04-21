@@ -244,7 +244,7 @@ def handle_save(name, controlnet_image_path, seed, cfg, sampler, scheduler, base
                 skip_button = gr.Button(label="Skip", value="Skip", elem_classes='type_row_half', elem_id='skip_button', visible=False)
                 stop_button = gr.Button(label="Stop", value="Stop", elem_classes='type_row_half', elem_id='stop_button', visible=False)
 
-                    def stop_clicked(currentTask):
+def stop_clicked(currentTask):
                         import ldm_patched.modules.model_management as model_management
                         currentTask.last_stop = 'stop'
                         if (currentTask.processing):
@@ -1187,4 +1187,5 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
+
 
