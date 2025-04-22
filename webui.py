@@ -205,11 +205,11 @@ with shared.gradio_root:
     with gr.Row():
         with gr.Column(scale=2):
             with gr.Row():
-                save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
-                save_btn = gr.Button("Save Character")
-                load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
-                load_btn = gr.Button("Load Character")
-                char_status = gr.Textbox(label="Status", interactive=False)
+                #save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
+                #save_btn = gr.Button("Save Character")
+                #load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
+                #load_btn = gr.Button("Load Character")
+                #char_status = gr.Textbox(label="Status", interactive=False)
 
             with gr.Row():
                 progress_window = grh.Image(label='Preview', show_label=True, visible=False, height=768,
