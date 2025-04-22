@@ -27,11 +27,9 @@ import json
 import os
 from PIL import Image
 
-CHARACTER_DIR = os.path.join("characters")  # or your custom path
+
+CHARACTER_DIR = os.path.join("characters")
 os.makedirs(CHARACTER_DIR, exist_ok=True)
-
-
-import json
 
 def save_character(name, image_path, parameters):
     try:
@@ -214,13 +212,7 @@ with shared.gradio_root:
 
     with gr.Row():
         with gr.Column(scale=2):
-            with gr.Row():
-                save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
-                save_btn = gr.Button("Save Character")
-                load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
-                load_btn = gr.Button("Load Character")
             
-            status = gr.Textbox(label="Status", interactive=False)
 
             with gr.Row():
                 progress_window = grh.Image(label='Preview', show_label=True, visible=False, height=768,
@@ -264,6 +256,47 @@ with shared.gradio_root:
                         if currentTask.processing:
                             model_management.interrupt_current_processing()
                         return currentTask
+                    def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
+                        if ref_image is None:
+                        return "Error: No reference image provided."
+                        image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
+                        ref_image.save(image_path)
+                        params = {
+                            "seed": seed,
+                             "cfg": cfg,
+                             "sampler": sampler,
+                             "scheduler": scheduler,
+                             "base_model": base_model
+                        }
+                         return save_character(name, image_path, params)
+
+                    def handle_load(name):
+                        data, status = load_character(name)
+                        if data is None:
+                        return None, 0, 7, "Euler", "Karras", "Fooocus_Base", status
+                        ref_img = Image.open(data["image_path"])
+                        params = data["parameters"]
+                        return (
+                            ref_img,
+                            params.get("seed", 0),
+                            params.get("cfg", 7),
+                            params.get("sampler", "Euler"),
+                            params.get("scheduler", "Karras"),
+                            params.get("base_model", "Fooocus_Base"),
+                            status
+                        )
+                    
+
+                with gr.Row():
+                    save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
+                    save_btn = gr.Button("Save Character")
+
+                    load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
+                    load_btn = gr.Button("Load Character")
+
+                    char_status = gr.Textbox(label="Status", interactive=False)
+
+                    reference_image_input = gr.Image(label="Reference Image", type="pil", tool="editor", image_mode="RGB")
 
                     seed = gr.Number(label="Seed", value=0, precision=0)
                     cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=7)
@@ -271,14 +304,21 @@ with shared.gradio_root:
                     scheduler = gr.Dropdown(label="Scheduler", choices=["Normal", "Karras", "Exponential"], value="Karras")
                     base_model = gr.Textbox(label="Base Model", value="Fooocus_Base", interactive=True)
 
-                    reference_image_input = gr.Image(label="Reference Image", type="pil", tool="editor", image_mode="RGB")
 
                     stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
                     skip_button.click(skip_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False)
 
-                    save_btn.click(fn=handle_save, inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model], outputs=[status])
-                    load_btn.click(fn=handle_load, inputs=[load_name], outputs=[reference_image_input, seed, status])
+                    save_btn.click(
+                        fn=handle_save,
+                        inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model],
+                        outputs=[char_status]
+                    )
 
+                    load_btn.click(
+                        fn=handle_load,
+                        inputs=[load_name],
+                        outputs=[reference_image_input, seed, cfg, sampler, scheduler, base_model, char_status]
+                    )
 
             with gr.Row(elem_classes='advanced_check_row'):
                 input_image_checkbox = gr.Checkbox(label='Input Image', value=modules.config.default_image_prompt_checkbox, container=False, elem_classes='min_check')
