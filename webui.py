@@ -265,41 +265,29 @@ with shared.gradio_root:
                 with gr.Row():
                     save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
                     save_btn = gr.Button("Save Character")
-
                     load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
                     load_btn = gr.Button("Load Character")
-
-                    char_status = gr.Textbox(label="Status", interactive=False)
+                    status = gr.Textbox(label="Status", interactive=False)
 
                     reference_image_input = gr.Image(label="Reference Image", type="pil", tool="editor", image_mode="RGB")
+                    input_image_checkbox = gr.Checkbox(label='Enable Image Prompt', value=modules.config.default_image_prompt_checkbox)
 
                     seed = gr.Number(label="Seed", value=0, precision=0)
                     cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=7)
                     sampler = gr.Dropdown(label="Sampler", choices=["Euler", "DDIM", "DPM++", "UniPC"], value="Euler")
                     scheduler = gr.Dropdown(label="Scheduler", choices=["Normal", "Karras", "Exponential"], value="Karras")
                     base_model = gr.Textbox(label="Base Model", value="Fooocus_Base", interactive=True)
-                    # Define the checkbox for the Image Prompt feature
-                    input_image_checkbox = gr.Checkbox(
-                          label='Enable Image Prompt', 
-                          value=modules.config.default_image_prompt_checkbox,  # Default value from config
-                          container=False, 
-                          elem_classes='min_check'
-                    )
-                    status = gr.Textbox(label="Status", interactive=False)
 
-
-                    stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
-                    skip_button.click(skip_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False)
                     save_btn.click(
-                        fn=handle_save, 
-                        inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model, input_image_checkbox], 
+                        fn=handle_save,
+                        inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model, input_image_checkbox],
                         outputs=[status]
                     )
 
                     load_btn.click(
-                        fn=handle_load, 
-                        inputs=[load_name], 
-                        outputs=[reference_image_input, seed, status, input_image_checkbox]  # Make sure to update the checkbox as well
+                        fn=handle_load,
+                        inputs=[load_name],
+                        outputs=[reference_image_input, seed, status, input_image_checkbox]
                     )
 
 
