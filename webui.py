@@ -24,80 +24,6 @@ from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
 
-import os
-import json
-import gradio as gr
-
-def save_character(
-    name, prompt, negative_prompt,
-    aspect_ratio, style, performance,
-    seed, use_random_seed,
-    cfg, sharpness, sampler, scheduler,
-    base_model, refiner_model, refiner_switch
-):
-    import os, json
-    os.makedirs("saved_characters", exist_ok=True)
-    if not name:
-        return "Please enter a name."
-
-    data = {
-        "prompt": prompt or "",
-        "negative_prompt": negative_prompt or "",
-        "aspect_ratio": aspect_ratio or "1:1",
-        "style": style or "",
-        "performance": performance or "Balanced",
-        "seed": int(seed), 
-        "use_random_seed": use_random_seed,
-        "cfg": cfg,
-        "sharpness": sharpness,
-        "sampler": sampler or "DPM++",
-        "scheduler": scheduler or "Karras",
-        "base_model": base_model or "default",
-        "refiner_model": refiner_model or "default",
-        "refiner_switch": refiner_switch,
-    }
-
-    with open(f"saved_characters/{name}.json", "w") as f:
-        json.dump(data, f, indent=2)
-
-    return f"Character '{name}' saved with full settings."
-
-
-
-
-def load_character(name):
-    import json
-    try:
-        with open(f"saved_characters/{name}.json", "r") as f:
-            data = json.load(f)
-
-        return (
-            data.get("prompt", ""),
-            data.get("negative_prompt", ""),
-            data.get("aspect_ratio", "1:1"),
-            data.get("style", ""),
-            data.get("performance", "Balanced"),
-            data.get("seed", 0),
-            data.get("use_random_seed", True),
-            data.get("cfg", 5),
-            data.get("sharpness", 2),
-            data.get("sampler", "DPM++"),
-            data.get("scheduler", "Karras"),
-            data.get("base_model", "default"),
-            data.get("refiner_model", "default"),
-            data.get("refiner_switch", 0),
-            f"Character '{name}' loaded successfully."
-        )
-    except Exception as e:
-        return "", "", "", "", "", 0, True, 5, 2, "", "", "", "", 0, f"Error loading character: {str(e)}"
-
-
-def list_characters():
-    os.makedirs("saved_characters", exist_ok=True)
-    return [f[:-5] for f in os.listdir("saved_characters") if f.endswith(".json")]
-
-
-
 def get_task(*args):
     args = list(args)
     args.pop(0)
@@ -245,30 +171,7 @@ with shared.gradio_root:
                 with gr.Column(scale=17):
                     prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.", elem_id='positive_prompt',
                                         autofocus=True, lines=3)
-                    with gr.Row():
-                         char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
-                         save_char_btn = gr.Button("💾 Save Character")
-                         status_box = gr.Textbox(label="Status", interactive=False)
 
-                    with gr.Row():
-                        load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
-                        load_char_btn = gr.Button("📂 Load Character")
-                    
-                    aspect_ratio = gr.Dropdown(label="Aspect Ratio", choices=["1:1", "16:9", "3:2", "2:3"])
-                    style = gr.Textbox(label="Style")
-                    performance = gr.Dropdown(label="Performance", choices=["Speed", "Balanced", "Quality"])
-                    seed = gr.Number(label="Seed", value=0, precision=0)
-                    use_random_seed = gr.Checkbox(label="Use Random Seed", value=False)
-                    cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=5)
-                    sharpness = gr.Slider(label="Sharpness", minimum=1, maximum=5, value=2)
-                    sampler = gr.Textbox(label="Sampler")
-                    scheduler = gr.Textbox(label="Scheduler")
-                    base_model = gr.Textbox(label="Base Model")
-                    refiner_model = gr.Textbox(label="Refiner Model")
-                    refiner_switch = gr.Slider(label="Refiner Switch", minimum=0, maximum=1, value=0.5, step=0.01)
-
-
-                    
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
@@ -685,38 +588,9 @@ with shared.gradio_root:
                                              info='Describing what you do not want to see.', lines=2,
                                              elem_id='negative_prompt',
                                              value=modules.config.default_prompt_negative)
-                seed = gr.Number(label="Seed", value=0, precision=0)
-                use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
-                
-                save_char_btn.click(
-                    fn=save_character,
-                    inputs=[
-                        char_name, prompt, negative_prompt,
-                        aspect_ratio, style, performance,
-                        seed, use_random_seed,
-                        cfg, sharpness, sampler, scheduler,
-                        base_model, refiner_model, refiner_switch
-                   ],
-                   outputs=[status_box]
-                 ).then(
-                   fn=lambda: gr.update(choices=list_characters()),
-                   outputs=[load_dropdown]
-                )
+                seed_random = gr.Checkbox(label='Random', value=True)
+                image_seed = gr.Textbox(label='Seed', value=0, max_lines=1, visible=False) # workaround for https://github.com/gradio-app/gradio/issues/5354
 
-                load_char_btn.click(
-                    fn=load_character,
-                    inputs=[load_dropdown],
-                    outputs=[
-                        prompt, negative_prompt,
-                        aspect_ratio, style, performance,
-                        seed, use_random_seed,
-                        cfg, sharpness, sampler, scheduler,
-                        base_model, refiner_model, refiner_switch,
-                        status_box
-                   ]
-              )
-
-         
                 def random_checked(r):
                     return gr.update(visible=not r)
 
@@ -732,7 +606,7 @@ with shared.gradio_root:
                             pass
                         return random.randint(constants.MIN_SEED, constants.MAX_SEED)
 
-                use_random_seed.change(random_checked, inputs=[use_random_seed], outputs=[seed],
+                seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed],
                                    queue=False, show_progress=False)
 
                 def update_history_link():
@@ -1019,7 +893,7 @@ with shared.gradio_root:
                              overwrite_width, overwrite_height, guidance_scale, sharpness, adm_scaler_positive,
                              adm_scaler_negative, adm_scaler_end, refiner_swap_method, adaptive_cfg, clip_skip,
                              base_model, refiner_model, refiner_switch, sampler_name, scheduler_name, vae_name,
-                             use_random_seed, seed, inpaint_engine, inpaint_engine_state,
+                             seed_random, image_seed, inpaint_engine, inpaint_engine_state,
                              inpaint_mode] + enhance_inpaint_mode_ctrls + [generate_button,
                              load_parameter_button] + freeu_ctrls + lora_ctrls
 
@@ -1103,7 +977,7 @@ with shared.gradio_root:
         ctrls = [currentTask, generate_image_grid]
         ctrls += [
             prompt, negative_prompt, style_selections,
-            performance_selection, aspect_ratios_selection, image_number, output_format,seed,
+            performance_selection, aspect_ratios_selection, image_number, output_format, image_seed,
             read_wildcards_in_order, sharpness, guidance_scale
         ]
 
@@ -1166,7 +1040,7 @@ with shared.gradio_root:
 
         generate_button.click(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), gr.update(visible=False, interactive=False), [], True),
                               outputs=[stop_button, skip_button, generate_button, gallery, state_is_generating]) \
-            .then(fn=refresh_seed, inputs=[use_random_seed,seed], outputs=seed) \
+            .then(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
             .then(fn=get_task, inputs=ctrls, outputs=currentTask) \
             .then(fn=generate_clicked, inputs=currentTask, outputs=[progress_html, progress_window, progress_gallery, gallery]) \
             .then(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=False, interactive=False), gr.update(visible=False, interactive=False), False),
@@ -1252,4 +1126,3 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
-
