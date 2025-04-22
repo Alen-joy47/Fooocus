@@ -188,6 +188,8 @@ def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
     # Save reference image
     image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
     ref_image.save(image_path)
+
+    # Save generation parameters
     params = {
         "seed": seed,
         "cfg": cfg,
@@ -195,15 +197,24 @@ def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
         "scheduler": scheduler,
         "base_model": base_model
     }
+
+    # Save character data
     return save_character(name, image_path, params)
+
 
 def handle_load(name):
     data, status = load_character(name)
+    
     if data is None:
-        return None, 0, status
+        return None, "", status, None  # Return None for reference image as image prompt
+
+    # Load the reference image
     ref_img = Image.open(data["image_path"])
-    params = data["parameters"]
-    return ref_img, params["seed"], status
+
+    # Return image, seed, status, and the reference image to use as the image prompt
+    params = data["params"]
+    return ref_img, params["seed"], status, ref_img
+
 
 
 with shared.gradio_root:
@@ -317,8 +328,9 @@ with shared.gradio_root:
                     load_btn.click(
                         fn=handle_load,
                         inputs=[load_name],
-                        outputs=[reference_image_input, seed, cfg, sampler, scheduler, base_model, char_status]
+                        outputs=[reference_image_input, seed, char_status, image_prompt_input]
                     )
+
 
             with gr.Row(elem_classes='advanced_check_row'):
                 input_image_checkbox = gr.Checkbox(label='Input Image', value=modules.config.default_image_prompt_checkbox, container=False, elem_classes='min_check')
