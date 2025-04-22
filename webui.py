@@ -251,6 +251,7 @@ with shared.gradio_root:
                             model_management.interrupt_current_processing()
                         return currentTask
                     seed = gr.Number(label="Seed", value=0, precision=0)
+                    status = gr.Textbox(label="Status", interactive=False)
                     cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=7)
                     sampler = gr.Dropdown(label="Sampler", choices=["Euler", "DDIM", "DPM++", "UniPC"], value="Euler")
                     scheduler = gr.Dropdown(label="Scheduler", choices=["Normal", "Karras", "Exponential"], value="Karras")
