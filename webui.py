@@ -176,7 +176,6 @@ if isinstance(args_manager.args.preset, str):
     title += ' ' + args_manager.args.preset
 
 shared.gradio_root = gr.Blocks(title=title).queue()
-from PIL import Image
 
 def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
     # Save reference image
@@ -194,14 +193,16 @@ def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
 def handle_load(name):
     data, status = load_character(name)
     if data is None:
-        return None, "", status
+        return None, 0, status
     ref_img = Image.open(data["image_path"])
     params = data["parameters"]
     return ref_img, params["seed"], status
 
+
 with shared.gradio_root:
     currentTask = gr.State(worker.AsyncTask(args=[]))
     inpaint_engine_state = gr.State('empty')
+
     with gr.Row():
         with gr.Column(scale=2):
             with gr.Row():
@@ -209,18 +210,22 @@ with shared.gradio_root:
                 save_btn = gr.Button("Save Character")
                 load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
                 load_btn = gr.Button("Load Character")
-                char_status = gr.Textbox(label="Status", interactive=False)
+            
+            status = gr.Textbox(label="Status", interactive=False)
 
             with gr.Row():
                 progress_window = grh.Image(label='Preview', show_label=True, visible=False, height=768,
                                             elem_classes=['main_view'])
                 progress_gallery = gr.Gallery(label='Finished Images', show_label=True, object_fit='contain',
                                               height=768, visible=False, elem_classes=['main_view', 'image_gallery'])
+
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False,
                                     elem_id='progress-bar', elem_classes='progress-bar')
+
             gallery = gr.Gallery(label='Gallery', show_label=False, object_fit='contain', visible=True, height=768,
                                  elem_classes=['resizable_area', 'main_view', 'final_gallery', 'image_gallery'],
                                  elem_id='final_gallery')
+
             with gr.Row():
                 with gr.Column(scale=17):
                     prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.", elem_id='positive_prompt',
@@ -240,27 +245,31 @@ with shared.gradio_root:
                     def stop_clicked(currentTask):
                         import ldm_patched.modules.model_management as model_management
                         currentTask.last_stop = 'stop'
-                        if (currentTask.processing):
+                        if currentTask.processing:
                             model_management.interrupt_current_processing()
                         return currentTask
 
                     def skip_clicked(currentTask):
                         import ldm_patched.modules.model_management as model_management
                         currentTask.last_stop = 'skip'
-                        if (currentTask.processing):
+                        if currentTask.processing:
                             model_management.interrupt_current_processing()
                         return currentTask
+
                     seed = gr.Number(label="Seed", value=0, precision=0)
-                    status = gr.Textbox(label="Status", interactive=False)
                     cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=7)
                     sampler = gr.Dropdown(label="Sampler", choices=["Euler", "DDIM", "DPM++", "UniPC"], value="Euler")
                     scheduler = gr.Dropdown(label="Scheduler", choices=["Normal", "Karras", "Exponential"], value="Karras")
                     base_model = gr.Textbox(label="Base Model", value="Fooocus_Base", interactive=True)
+
+                    reference_image_input = gr.Image(label="Reference Image", type="pil", tool="editor", image_mode="RGB")
+
                     stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
                     skip_button.click(skip_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False)
-                    reference_image_input = gr.Image(label="Reference Image", type="pil", tool="editor", image_mode="RGB")
+
                     save_btn.click(fn=handle_save, inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model], outputs=[status])
                     load_btn.click(fn=handle_load, inputs=[load_name], outputs=[reference_image_input, seed, status])
+
 
             with gr.Row(elem_classes='advanced_check_row'):
                 input_image_checkbox = gr.Checkbox(label='Input Image', value=modules.config.default_image_prompt_checkbox, container=False, elem_classes='min_check')
