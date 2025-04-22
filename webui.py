@@ -185,41 +185,28 @@ if isinstance(args_manager.args.preset, str):
 shared.gradio_root = gr.Blocks(title=title).queue()
 
 # Function to handle saving the character
-def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model, image_prompt_checkbox):
-    # Save reference image
+def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model, use_img_prompt):
+    if ref_image is None:
+        return "Error: No reference image provided."
     image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
     ref_image.save(image_path)
-    
-    # Save other parameters along with the image prompt checkbox state
     params = {
         "seed": seed,
         "cfg": cfg,
         "sampler": sampler,
         "scheduler": scheduler,
         "base_model": base_model,
-        "image_prompt_enabled": image_prompt_checkbox  # Save the checkbox state
+        "use_img_prompt": use_img_prompt,
     }
-    
     return save_character(name, image_path, params)
 
-
-
-# Function to handle loading the character
 def handle_load(name):
     data, status = load_character(name)
-    
     if data is None:
-        return None, "", status, False  # Return False for checkbox if no image is found
-
-    # Load the reference image and parameters
+        return None, 0, status, False
     ref_img = Image.open(data["image_path"])
-    params = data["params"]
-    
-    # Retrieve the image prompt enabled state
-    image_prompt_enabled = params.get("image_prompt_enabled", False)  # Default to False if not found
-
-    return ref_img, params["seed"], status, image_prompt_enabled  # Return checkbox state
-
+    params = data["parameters"]
+    return ref_img, params["seed"], status, params.get("use_img_prompt", False)
 
 
 
@@ -273,36 +260,7 @@ with shared.gradio_root:
                         if currentTask.processing:
                             model_management.interrupt_current_processing()
                         return currentTask
-                    def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
-                        if ref_image is None:
-                           return "Error: No reference image provided."
-                        image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
-                        ref_image.save(image_path)
-                        params = {
-                            "seed": seed,
-                             "cfg": cfg,
-                             "sampler": sampler,
-                             "scheduler": scheduler,
-                             "base_model": base_model
-                        }
-                        return save_character(name, image_path, params)
-
-                    def handle_load(name):
-                        data, status = load_character(name)
-                        if data is None:
-                         return None, 0, 7, "Euler", "Karras", "Fooocus_Base", status
-                        ref_img = Image.open(data["image_path"])
-                        params = data["parameters"]
-                        return (
-                            ref_img,
-                            params.get("seed", 0),
-                            params.get("cfg", 7),
-                            params.get("sampler", "Euler"),
-                            params.get("scheduler", "Karras"),
-                            params.get("base_model", "Fooocus_Base"),
-                            status
-                        )
-                    
+                
 
                 with gr.Row():
                     save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
