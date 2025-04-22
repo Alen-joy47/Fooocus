@@ -258,7 +258,7 @@ with shared.gradio_root:
                     style = gr.Textbox(label="Style")
                     performance = gr.Dropdown(label="Performance", choices=["Speed", "Balanced", "Quality"])
                     seed = gr.Number(label="Seed", value=0, precision=0)
-                    use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
+                    use_random_seed = gr.Checkbox(label="Use Random Seed", value=False)
                     cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=5)
                     sharpness = gr.Slider(label="Sharpness", minimum=1, maximum=5, value=2)
                     sampler = gr.Textbox(label="Sampler")
