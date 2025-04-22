@@ -320,6 +320,13 @@ with shared.gradio_root:
                     sampler = gr.Dropdown(label="Sampler", choices=["Euler", "DDIM", "DPM++", "UniPC"], value="Euler")
                     scheduler = gr.Dropdown(label="Scheduler", choices=["Normal", "Karras", "Exponential"], value="Karras")
                     base_model = gr.Textbox(label="Base Model", value="Fooocus_Base", interactive=True)
+                    # Define the checkbox for the Image Prompt feature
+                    input_image_checkbox = gr.Checkbox(
+                          label='Enable Image Prompt', 
+                          value=modules.config.default_image_prompt_checkbox,  # Default value from config
+                          container=False, 
+                          elem_classes='min_check'
+                    )
 
 
                     stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
@@ -333,7 +340,7 @@ with shared.gradio_root:
                     load_btn.click(
                         fn=handle_load, 
                         inputs=[load_name], 
-                        outputs=[reference_image_input, seed, status, input_image_checkbox]  # Update checkbox based on saved data
+                        outputs=[reference_image_input, seed, status, input_image_checkbox]  # Make sure to update the checkbox as well
                     )
 
 
