@@ -255,10 +255,10 @@ with shared.gradio_root:
                         currentTask.last_stop = 'skip'
                         if currentTask.processing:
                             model_management.interrupt_current_processing()
-                        return currentTask
+                           return currentTask
                     def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
                         if ref_image is None:
-                        return "Error: No reference image provided."
+                           return "Error: No reference image provided."
                         image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
                         ref_image.save(image_path)
                         params = {
