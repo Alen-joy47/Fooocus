@@ -23,6 +23,30 @@ from modules.private_logger import get_current_html_path
 from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
+import json
+import os
+from PIL import Image
+
+CHARACTER_DIR = "saved_characters"
+os.makedirs(CHARACTER_DIR, exist_ok=True)
+
+def save_character(name, image_path, params):
+    character_data = {
+        "image_path": image_path,
+        "params": params
+    }
+    with open(os.path.join(CHARACTER_DIR, f"{name}.json"), "w") as f:
+        json.dump(character_data, f)
+    return f"Character '{name}' saved."
+
+def load_character(name):
+    filepath = os.path.join(CHARACTER_DIR, f"{name}.json")
+    if not os.path.exists(filepath):
+        return None, f"Character '{name}' not found."
+    with open(filepath, "r") as f:
+        data = json.load(f)
+    return data, f"Character '{name}' loaded."
+
 
 def get_task(*args):
     args = list(args)
@@ -157,6 +181,13 @@ with shared.gradio_root:
     inpaint_engine_state = gr.State('empty')
     with gr.Row():
         with gr.Column(scale=2):
+            with gr.Row():
+                save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
+                save_btn = gr.Button("Save Character")
+                load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
+                load_btn = gr.Button("Load Character")
+                char_status = gr.Textbox(label="Status", interactive=False)
+
             with gr.Row():
                 progress_window = grh.Image(label='Preview', show_label=True, visible=False, height=768,
                                             elem_classes=['main_view'])
