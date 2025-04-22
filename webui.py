@@ -327,6 +327,7 @@ with shared.gradio_root:
                           container=False, 
                           elem_classes='min_check'
                     )
+                    status = gr.Textbox(label="Status", interactive=False)
 
 
                     stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
