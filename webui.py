@@ -184,36 +184,42 @@ if isinstance(args_manager.args.preset, str):
 
 shared.gradio_root = gr.Blocks(title=title).queue()
 
-def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
+# Function to handle saving the character
+def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model, image_prompt_checkbox):
     # Save reference image
     image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
     ref_image.save(image_path)
-
-    # Save generation parameters
+    
+    # Save other parameters along with the image prompt checkbox state
     params = {
         "seed": seed,
         "cfg": cfg,
         "sampler": sampler,
         "scheduler": scheduler,
-        "base_model": base_model
+        "base_model": base_model,
+        "image_prompt_enabled": image_prompt_checkbox  # Save the checkbox state
     }
-
-    # Save character data
+    
     return save_character(name, image_path, params)
 
 
+
+# Function to handle loading the character
 def handle_load(name):
     data, status = load_character(name)
     
     if data is None:
-        return None, "", status, None  # Return None for reference image as image prompt
+        return None, "", status, False  # Return False for checkbox if no image is found
 
-    # Load the reference image
+    # Load the reference image and parameters
     ref_img = Image.open(data["image_path"])
-
-    # Return image, seed, status, and the reference image to use as the image prompt
     params = data["params"]
-    return ref_img, params["seed"], status, ref_img
+    
+    # Retrieve the image prompt enabled state
+    image_prompt_enabled = params.get("image_prompt_enabled", False)  # Default to False if not found
+
+    return ref_img, params["seed"], status, image_prompt_enabled  # Return checkbox state
+
 
 
 
@@ -318,17 +324,16 @@ with shared.gradio_root:
 
                     stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
                     skip_button.click(skip_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False)
-
                     save_btn.click(
-                        fn=handle_save,
-                        inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model],
-                        outputs=[char_status]
+                        fn=handle_save, 
+                        inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model, input_image_checkbox], 
+                        outputs=[status]
                     )
 
                     load_btn.click(
-                        fn=handle_load,
-                        inputs=[load_name],
-                        outputs=[reference_image_input, seed, char_status, image_prompt_input]
+                        fn=handle_load, 
+                        inputs=[load_name], 
+                        outputs=[reference_image_input, seed, status, input_image_checkbox]  # Update checkbox based on saved data
                     )
 
 
