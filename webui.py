@@ -27,6 +27,7 @@ import json
 import os
 from PIL import Image
 
+
 CHARACTER_DIR = "saved_characters"
 os.makedirs(CHARACTER_DIR, exist_ok=True)
 
@@ -175,6 +176,28 @@ if isinstance(args_manager.args.preset, str):
     title += ' ' + args_manager.args.preset
 
 shared.gradio_root = gr.Blocks(title=title).queue()
+from PIL import Image
+
+def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model):
+    # Save reference image
+    image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
+    ref_image.save(image_path)
+    params = {
+        "seed": seed,
+        "cfg": cfg,
+        "sampler": sampler,
+        "scheduler": scheduler,
+        "base_model": base_model
+    }
+    return save_character(name, image_path, params)
+
+def handle_load(name):
+    data, status = load_character(name)
+    if data is None:
+        return None, "", status
+    ref_img = Image.open(data["image_path"])
+    params = data["parameters"]
+    return ref_img, params["seed"], status
 
 with shared.gradio_root:
     currentTask = gr.State(worker.AsyncTask(args=[]))
@@ -230,6 +253,9 @@ with shared.gradio_root:
 
                     stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
                     skip_button.click(skip_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False)
+                    save_btn.click(fn=handle_save, inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model], outputs=[status])
+                    load_btn.click(fn=handle_load, inputs=[load_name], outputs=[reference_image_input, seed, status])
+
             with gr.Row(elem_classes='advanced_check_row'):
                 input_image_checkbox = gr.Checkbox(label='Input Image', value=modules.config.default_image_prompt_checkbox, container=False, elem_classes='min_check')
                 enhance_checkbox = gr.Checkbox(label='Enhance', value=modules.config.default_enhance_checkbox, container=False, elem_classes='min_check')
