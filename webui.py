@@ -27,26 +27,35 @@ import json
 import os
 from PIL import Image
 
-
-CHARACTER_DIR = "saved_characters"
+CHARACTER_DIR = os.path.join("characters")  # or your custom path
 os.makedirs(CHARACTER_DIR, exist_ok=True)
 
-def save_character(name, image_path, params):
-    character_data = {
-        "image_path": image_path,
-        "params": params
-    }
-    with open(os.path.join(CHARACTER_DIR, f"{name}.json"), "w") as f:
-        json.dump(character_data, f)
-    return f"Character '{name}' saved."
+
+import json
+
+def save_character(name, image_path, parameters):
+    try:
+        data = {
+            "image_path": image_path,
+            "parameters": parameters
+        }
+        json_path = os.path.join(CHARACTER_DIR, f"{name}.json")
+        with open(json_path, "w") as f:
+            json.dump(data, f)
+        return "Character saved successfully."
+    except Exception as e:
+        return f"Error saving character: {str(e)}"
 
 def load_character(name):
-    filepath = os.path.join(CHARACTER_DIR, f"{name}.json")
-    if not os.path.exists(filepath):
-        return None, f"Character '{name}' not found."
-    with open(filepath, "r") as f:
-        data = json.load(f)
-    return data, f"Character '{name}' loaded."
+    try:
+        json_path = os.path.join(CHARACTER_DIR, f"{name}.json")
+        if not os.path.exists(json_path):
+            return None, f"Character '{name}' not found."
+        with open(json_path, "r") as f:
+            data = json.load(f)
+        return data, "Character loaded successfully."
+    except Exception as e:
+        return None, f"Error loading character: {str(e)}"
 
 
 def get_task(*args):
