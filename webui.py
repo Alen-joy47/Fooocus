@@ -268,12 +268,12 @@ with shared.gradio_root:
                              "scheduler": scheduler,
                              "base_model": base_model
                         }
-                         return save_character(name, image_path, params)
+                        return save_character(name, image_path, params)
 
                     def handle_load(name):
                         data, status = load_character(name)
                         if data is None:
-                        return None, 0, 7, "Euler", "Karras", "Fooocus_Base", status
+                         return None, 0, 7, "Euler", "Karras", "Fooocus_Base", status
                         ref_img = Image.open(data["image_path"])
                         params = data["parameters"]
                         return (
