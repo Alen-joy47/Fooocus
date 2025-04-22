@@ -253,6 +253,7 @@ with shared.gradio_root:
 
                     stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
                     skip_button.click(skip_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False)
+                    reference_image_input = gr.Image(label="Reference Image", type="pil", tool="editor", image_mode="RGB")
                     save_btn.click(fn=handle_save, inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model], outputs=[status])
                     load_btn.click(fn=handle_load, inputs=[load_name], outputs=[reference_image_input, seed, status])
 
