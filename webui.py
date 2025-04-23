@@ -69,7 +69,7 @@ def save_character(
 
 def load_character(name):
     import json
-    try:
+try:
     with open(f"{SAVE_DIR}/{name}.json", "r") as f:
         data = json.load(f)
 
