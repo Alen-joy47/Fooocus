@@ -28,6 +28,12 @@ import os
 import json
 import gradio as gr
 
+import os
+import json
+
+SAVE_DIR = "/content/drive/MyDrive/FooocusCharacters"
+os.makedirs(SAVE_DIR, exist_ok=True)
+
 def save_character(
     name, prompt, negative_prompt,
     aspect_ratio, style, performance,
@@ -35,20 +41,13 @@ def save_character(
     cfg, sharpness, sampler, scheduler,
     base_model, refiner_model, refiner_switch
 ):
-    SAVE_DIR = "/content/drive/MyDrive/FooocusCharacters"
-    os.makedirs(SAVE_DIR, exist_ok=True)
-
-    with open(f"{SAVE_DIR}/{name}.json", "w") as f:
-        json.dump(data, f)
-
-
     data = {
         "prompt": prompt or "",
         "negative_prompt": negative_prompt or "",
         "aspect_ratio": aspect_ratio or "1:1",
         "style": style or "",
         "performance": performance or "Balanced",
-        "seed": int(seed), 
+        "seed": int(seed),
         "use_random_seed": use_random_seed,
         "cfg": cfg,
         "sharpness": sharpness,
@@ -59,13 +58,10 @@ def save_character(
         "refiner_switch": refiner_switch,
     }
 
-    with open(f"saved_characters/{name}.json", "w") as f:
+    with open(f"{SAVE_DIR}/{name}.json", "w") as f:
         json.dump(data, f, indent=2)
 
     return f"Character '{name}' saved with full settings."
-
-
-
 
 def load_character(name):
     try:
@@ -92,10 +88,11 @@ def load_character(name):
     except Exception as e:
         return "", "", "", "", "", 0, True, 5, 2, "", "", "", "", 0, f"Error loading character: {str(e)}"
 
-
 def list_characters():
-    os.makedirs("saved_characters", exist_ok=True)
-    return [f[:-5] for f in os.listdir("saved_characters") if f.endswith(".json")]
+    if not os.path.exists(SAVE_DIR):
+        return []
+    return [f[:-5] for f in os.listdir(SAVE_DIR) if f.endswith(".json")]
+
 
 
 
