@@ -35,8 +35,8 @@ def save_character(
     cfg, sharpness, sampler, scheduler,
     base_model, refiner_model, refiner_switch
 ):
-   SAVE_DIR = "/content/drive/MyDrive/FooocusCharacters"
-   os.makedirs(SAVE_DIR, exist_ok=True)
+    SAVE_DIR = "/content/drive/MyDrive/FooocusCharacters"
+    os.makedirs(SAVE_DIR, exist_ok=True)
 
     with open(f"{SAVE_DIR}/{name}.json", "w") as f:
         json.dump(data, f)
