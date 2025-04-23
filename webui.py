@@ -35,10 +35,12 @@ def save_character(
     cfg, sharpness, sampler, scheduler,
     base_model, refiner_model, refiner_switch
 ):
-    import os, json
-    os.makedirs("saved_characters", exist_ok=True)
-    if not name:
-        return "Please enter a name."
+   SAVE_DIR = "/content/drive/MyDrive/FooocusCharacters"
+   os.makedirs(SAVE_DIR, exist_ok=True)
+
+    with open(f"{SAVE_DIR}/{name}.json", "w") as f:
+        json.dump(data, f)
+
 
     data = {
         "prompt": prompt or "",
@@ -68,8 +70,9 @@ def save_character(
 def load_character(name):
     import json
     try:
-        with open(f"saved_characters/{name}.json", "r") as f:
-            data = json.load(f)
+    with open(f"{SAVE_DIR}/{name}.json", "r") as f:
+        data = json.load(f)
+
 
         return (
             data.get("prompt", ""),
