@@ -68,13 +68,11 @@ def save_character(
 
 
 def load_character(name):
-    import json
-try:
-    with open(f"{SAVE_DIR}/{name}.json", "r") as f:
-        data = json.load(f)
+    try:
+        with open(f"{SAVE_DIR}/{name}.json", "r") as f:
+            data = json.load(f)
 
-
-    return (
+        return (
             data.get("prompt", ""),
             data.get("negative_prompt", ""),
             data.get("aspect_ratio", "1:1"),
