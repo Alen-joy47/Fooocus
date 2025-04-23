@@ -23,37 +23,79 @@ from modules.private_logger import get_current_html_path
 from modules.ui_gradio_extensions import reload_javascript
 from modules.auth import auth_enabled, check_auth
 from modules.util import is_json
-import json
+
 import os
-from PIL import Image
+import json
+import gradio as gr
+
+def save_character(
+    name, prompt, negative_prompt,
+    aspect_ratio, style, performance,
+    seed, use_random_seed,
+    cfg, sharpness, sampler, scheduler,
+    base_model, refiner_model, refiner_switch
+):
+    import os, json
+    os.makedirs("saved_characters", exist_ok=True)
+    if not name:
+        return "Please enter a name."
+
+    data = {
+        "prompt": prompt or "",
+        "negative_prompt": negative_prompt or "",
+        "aspect_ratio": aspect_ratio or "1:1",
+        "style": style or "",
+        "performance": performance or "Balanced",
+        "seed": int(seed), 
+        "use_random_seed": use_random_seed,
+        "cfg": cfg,
+        "sharpness": sharpness,
+        "sampler": sampler or "DPM++",
+        "scheduler": scheduler or "Karras",
+        "base_model": base_model or "default",
+        "refiner_model": refiner_model or "default",
+        "refiner_switch": refiner_switch,
+    }
+
+    with open(f"saved_characters/{name}.json", "w") as f:
+        json.dump(data, f, indent=2)
+
+    return f"Character '{name}' saved with full settings."
 
 
-CHARACTER_DIR = os.path.join("characters")
-os.makedirs(CHARACTER_DIR, exist_ok=True)
 
-def save_character(name, image_path, parameters):
-    try:
-        data = {
-            "image_path": image_path,
-            "parameters": parameters
-        }
-        json_path = os.path.join(CHARACTER_DIR, f"{name}.json")
-        with open(json_path, "w") as f:
-            json.dump(data, f)
-        return "Character saved successfully."
-    except Exception as e:
-        return f"Error saving character: {str(e)}"
 
 def load_character(name):
+    import json
     try:
-        json_path = os.path.join(CHARACTER_DIR, f"{name}.json")
-        if not os.path.exists(json_path):
-            return None, f"Character '{name}' not found."
-        with open(json_path, "r") as f:
+        with open(f"saved_characters/{name}.json", "r") as f:
             data = json.load(f)
-        return data, "Character loaded successfully."
+
+        return (
+            data.get("prompt", ""),
+            data.get("negative_prompt", ""),
+            data.get("aspect_ratio", "1:1"),
+            data.get("style", ""),
+            data.get("performance", "Balanced"),
+            data.get("seed", 0),
+            data.get("use_random_seed", True),
+            data.get("cfg", 5),
+            data.get("sharpness", 2),
+            data.get("sampler", "DPM++"),
+            data.get("scheduler", "Karras"),
+            data.get("base_model", "default"),
+            data.get("refiner_model", "default"),
+            data.get("refiner_switch", 0),
+            f"Character '{name}' loaded successfully."
+        )
     except Exception as e:
-        return None, f"Error loading character: {str(e)}"
+        return "", "", "", "", "", 0, True, 5, 2, "", "", "", "", 0, f"Error loading character: {str(e)}"
+
+
+def list_characters():
+    os.makedirs("saved_characters", exist_ok=True)
+    return [f[:-5] for f in os.listdir("saved_characters") if f.endswith(".json")]
+
 
 
 def get_task(*args):
@@ -184,58 +226,49 @@ if isinstance(args_manager.args.preset, str):
 
 shared.gradio_root = gr.Blocks(title=title).queue()
 
-# Function to handle saving the character
-def handle_save(name, ref_image, seed, cfg, sampler, scheduler, base_model, use_img_prompt):
-    if ref_image is None:
-        return "Error: No reference image provided."
-    image_path = os.path.join(CHARACTER_DIR, f"{name}_ref.png")
-    ref_image.save(image_path)
-    params = {
-        "seed": seed,
-        "cfg": cfg,
-        "sampler": sampler,
-        "scheduler": scheduler,
-        "base_model": base_model,
-        "use_img_prompt": use_img_prompt,
-    }
-    return save_character(name, image_path, params)
-
-def handle_load(name):
-    data, status = load_character(name)
-    if data is None:
-        return None, 0, status, False
-    ref_img = Image.open(data["image_path"])
-    params = data["parameters"]
-    return ref_img, params["seed"], status, params.get("use_img_prompt", False)
-
-
-
 with shared.gradio_root:
     currentTask = gr.State(worker.AsyncTask(args=[]))
     inpaint_engine_state = gr.State('empty')
-
     with gr.Row():
         with gr.Column(scale=2):
-            
-
             with gr.Row():
                 progress_window = grh.Image(label='Preview', show_label=True, visible=False, height=768,
                                             elem_classes=['main_view'])
                 progress_gallery = gr.Gallery(label='Finished Images', show_label=True, object_fit='contain',
                                               height=768, visible=False, elem_classes=['main_view', 'image_gallery'])
-
             progress_html = gr.HTML(value=modules.html.make_progress_html(32, 'Progress 32%'), visible=False,
                                     elem_id='progress-bar', elem_classes='progress-bar')
-
             gallery = gr.Gallery(label='Gallery', show_label=False, object_fit='contain', visible=True, height=768,
                                  elem_classes=['resizable_area', 'main_view', 'final_gallery', 'image_gallery'],
                                  elem_id='final_gallery')
-
             with gr.Row():
                 with gr.Column(scale=17):
                     prompt = gr.Textbox(show_label=False, placeholder="Type prompt here or paste parameters.", elem_id='positive_prompt',
                                         autofocus=True, lines=3)
+                    with gr.Row():
+                         char_name = gr.Textbox(label="Character Name", placeholder="Enter name to save")
+                         save_char_btn = gr.Button("💾 Save Character")
+                         status_box = gr.Textbox(label="Status", interactive=False)
 
+                    with gr.Row():
+                        load_dropdown = gr.Dropdown(label="Load Saved Character", choices=list_characters())
+                        load_char_btn = gr.Button("📂 Load Character")
+                    
+                    aspect_ratio = gr.Dropdown(label="Aspect Ratio", choices=["1:1", "16:9", "3:2", "2:3"])
+                    style = gr.Textbox(label="Style")
+                    performance = gr.Dropdown(label="Performance", choices=["Speed", "Balanced", "Quality"])
+                    seed = gr.Number(label="Seed", value=0, precision=0)
+                    use_random_seed = gr.Checkbox(label="Use Random Seed", value=False)
+                    cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=5)
+                    sharpness = gr.Slider(label="Sharpness", minimum=1, maximum=5, value=2)
+                    sampler = gr.Textbox(label="Sampler")
+                    scheduler = gr.Textbox(label="Scheduler")
+                    base_model = gr.Textbox(label="Base Model")
+                    refiner_model = gr.Textbox(label="Refiner Model")
+                    refiner_switch = gr.Slider(label="Refiner Switch", minimum=0, maximum=1, value=0.5, step=0.01)
+
+
+                    
                     default_prompt = modules.config.default_prompt
                     if isinstance(default_prompt, str) and default_prompt != '':
                         shared.gradio_root.load(lambda: default_prompt, outputs=prompt)
@@ -250,47 +283,19 @@ with shared.gradio_root:
                     def stop_clicked(currentTask):
                         import ldm_patched.modules.model_management as model_management
                         currentTask.last_stop = 'stop'
-                        if currentTask.processing:
+                        if (currentTask.processing):
                             model_management.interrupt_current_processing()
                         return currentTask
 
                     def skip_clicked(currentTask):
                         import ldm_patched.modules.model_management as model_management
                         currentTask.last_stop = 'skip'
-                        if currentTask.processing:
+                        if (currentTask.processing):
                             model_management.interrupt_current_processing()
                         return currentTask
-                
 
-                with gr.Row():
-                    save_name = gr.Textbox(label="Character Name", placeholder="e.g. WarriorElf01")
-                    save_btn = gr.Button("Save Character")
-                    load_name = gr.Textbox(label="Load Character Name", placeholder="e.g. WarriorElf01")
-                    load_btn = gr.Button("Load Character")
-                    status = gr.Textbox(label="Status", interactive=False)
-
-                    reference_image_input = gr.Image(label="Reference Image", type="pil", tool="editor", image_mode="RGB")
-                    input_image_checkbox = gr.Checkbox(label='Enable Image Prompt', value=modules.config.default_image_prompt_checkbox)
-
-                    seed = gr.Number(label="Seed", value=0, precision=0)
-                    cfg = gr.Slider(label="CFG Scale", minimum=1, maximum=20, value=7)
-                    sampler = gr.Dropdown(label="Sampler", choices=["Euler", "DDIM", "DPM++", "UniPC"], value="Euler")
-                    scheduler = gr.Dropdown(label="Scheduler", choices=["Normal", "Karras", "Exponential"], value="Karras")
-                    base_model = gr.Textbox(label="Base Model", value="Fooocus_Base", interactive=True)
-
-                    save_btn.click(
-                        fn=handle_save,
-                        inputs=[save_name, reference_image_input, seed, cfg, sampler, scheduler, base_model, input_image_checkbox],
-                        outputs=[status]
-                    )
-
-                    load_btn.click(
-                        fn=handle_load,
-                        inputs=[load_name],
-                        outputs=[reference_image_input, seed, status, input_image_checkbox]
-                    )
-
-
+                    stop_button.click(stop_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False, _js='cancelGenerateForever')
+                    skip_button.click(skip_clicked, inputs=currentTask, outputs=currentTask, queue=False, show_progress=False)
             with gr.Row(elem_classes='advanced_check_row'):
                 input_image_checkbox = gr.Checkbox(label='Input Image', value=modules.config.default_image_prompt_checkbox, container=False, elem_classes='min_check')
                 enhance_checkbox = gr.Checkbox(label='Enhance', value=modules.config.default_enhance_checkbox, container=False, elem_classes='min_check')
@@ -680,9 +685,38 @@ with shared.gradio_root:
                                              info='Describing what you do not want to see.', lines=2,
                                              elem_id='negative_prompt',
                                              value=modules.config.default_prompt_negative)
-                seed_random = gr.Checkbox(label='Random', value=True)
-                image_seed = gr.Textbox(label='Seed', value=0, max_lines=1, visible=False) # workaround for https://github.com/gradio-app/gradio/issues/5354
+                seed = gr.Number(label="Seed", value=0, precision=0)
+                use_random_seed = gr.Checkbox(label="Use Random Seed", value=True)
+                
+                save_char_btn.click(
+                    fn=save_character,
+                    inputs=[
+                        char_name, prompt, negative_prompt,
+                        aspect_ratio, style, performance,
+                        seed, use_random_seed,
+                        cfg, sharpness, sampler, scheduler,
+                        base_model, refiner_model, refiner_switch
+                   ],
+                   outputs=[status_box]
+                 ).then(
+                   fn=lambda: gr.update(choices=list_characters()),
+                   outputs=[load_dropdown]
+                )
 
+                load_char_btn.click(
+                    fn=load_character,
+                    inputs=[load_dropdown],
+                    outputs=[
+                        prompt, negative_prompt,
+                        aspect_ratio, style, performance,
+                        seed, use_random_seed,
+                        cfg, sharpness, sampler, scheduler,
+                        base_model, refiner_model, refiner_switch,
+                        status_box
+                   ]
+              )
+
+         
                 def random_checked(r):
                     return gr.update(visible=not r)
 
@@ -698,7 +732,7 @@ with shared.gradio_root:
                             pass
                         return random.randint(constants.MIN_SEED, constants.MAX_SEED)
 
-                seed_random.change(random_checked, inputs=[seed_random], outputs=[image_seed],
+                use_random_seed.change(random_checked, inputs=[use_random_seed], outputs=[seed],
                                    queue=False, show_progress=False)
 
                 def update_history_link():
@@ -985,7 +1019,7 @@ with shared.gradio_root:
                              overwrite_width, overwrite_height, guidance_scale, sharpness, adm_scaler_positive,
                              adm_scaler_negative, adm_scaler_end, refiner_swap_method, adaptive_cfg, clip_skip,
                              base_model, refiner_model, refiner_switch, sampler_name, scheduler_name, vae_name,
-                             seed_random, image_seed, inpaint_engine, inpaint_engine_state,
+                             use_random_seed, seed, inpaint_engine, inpaint_engine_state,
                              inpaint_mode] + enhance_inpaint_mode_ctrls + [generate_button,
                              load_parameter_button] + freeu_ctrls + lora_ctrls
 
@@ -1069,7 +1103,7 @@ with shared.gradio_root:
         ctrls = [currentTask, generate_image_grid]
         ctrls += [
             prompt, negative_prompt, style_selections,
-            performance_selection, aspect_ratios_selection, image_number, output_format, image_seed,
+            performance_selection, aspect_ratios_selection, image_number, output_format,seed,
             read_wildcards_in_order, sharpness, guidance_scale
         ]
 
@@ -1132,7 +1166,7 @@ with shared.gradio_root:
 
         generate_button.click(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=True, interactive=True), gr.update(visible=False, interactive=False), [], True),
                               outputs=[stop_button, skip_button, generate_button, gallery, state_is_generating]) \
-            .then(fn=refresh_seed, inputs=[seed_random, image_seed], outputs=image_seed) \
+            .then(fn=refresh_seed, inputs=[use_random_seed,seed], outputs=seed) \
             .then(fn=get_task, inputs=ctrls, outputs=currentTask) \
             .then(fn=generate_clicked, inputs=currentTask, outputs=[progress_html, progress_window, progress_gallery, gallery]) \
             .then(lambda: (gr.update(visible=True, interactive=True), gr.update(visible=False, interactive=False), gr.update(visible=False, interactive=False), False),
@@ -1218,3 +1252,4 @@ shared.gradio_root.launch(
     allowed_paths=[modules.config.path_outputs],
     blocked_paths=[constants.AUTH_FILENAME]
 )
+
