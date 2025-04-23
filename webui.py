@@ -74,7 +74,7 @@ try:
         data = json.load(f)
 
 
-        return (
+    return (
             data.get("prompt", ""),
             data.get("negative_prompt", ""),
             data.get("aspect_ratio", "1:1"),
