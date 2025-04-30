@@ -31,7 +31,7 @@ import gradio as gr
 import os
 import json
 
-SAVE_DIR = "/content/drive/MyDrive/FooocusCharacters"
+SAVE_DIR = "/content/drive/MyDrive/fooocus"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 def save_character(
