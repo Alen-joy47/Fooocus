@@ -64,7 +64,7 @@ def save_character(
     return f"Character '{name}' saved with full settings."
 
 def load_character(name):
-    SAVE_DIR = "/content/drive/MyDrive/Fooocus"
+    SAVE_DIR = "/content/drive/MyDrive/fooocus"
     
     if not name:
         return "", "", "", "", "", 0, True, 5, 2, "", "", "", "", 0, "Error: No character name provided."
@@ -94,7 +94,7 @@ def load_character(name):
         return "", "", "", "", "", 0, True, 5, 2, "", "", "", "", 0, f"Error loading character: {str(e)}"
 
 def list_characters():
-    SAVE_DIR = "/content/drive/MyDrive/Fooocus"
+    SAVE_DIR = "/content/drive/MyDrive/fooocus"
     if not os.path.exists(SAVE_DIR):
         return []
     return [f[:-5] for f in os.listdir(SAVE_DIR) if f.endswith(".json")]
